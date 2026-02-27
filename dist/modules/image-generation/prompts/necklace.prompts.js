@@ -1,0 +1,6 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.NECKLACE_MODEL_PROMPT = exports.NECKLACE_PREMIUM_PROMPT = void 0;
+exports.NECKLACE_PREMIUM_PROMPT = `Place the necklace centered on a clean, minimal warm cream background with a soft neutral beige tone. The background should be smooth and uniform, with no visible texture or props. Use diffused soft studio lighting with very gentle shadows and a subtle floating shadow directly beneath the pendant to create a natural suspended effect. The color grading should be warm, slightly muted, low saturation, and evenly balanced. Keep the composition symmetrical, centered, and elegant. Ensure the product appears professionally staged, perfectly aligned, sharp, and high-end e-commerce ready. Maintain accurate colors, realistic reflections on the metal, and natural proportions. Ultra realistic, high resolution, luxury minimal aesthetic.`;
+exports.NECKLACE_MODEL_PROMPT = `Pon el producto en una persona modelo como para lucirlo en un e-commerce`;
+//# sourceMappingURL=necklace.prompts.js.map

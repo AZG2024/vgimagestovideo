@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Video Builder - Test Panel</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0a0a0a; color: #e0e0e0; min-height: 100vh; padding: 24px; }
+    h1 { font-size: 24px; margin-bottom: 8px; color: #fff; }
+    .subtitle { color: #888; margin-bottom: 32px; font-size: 14px; }
+    .container { max-width: 900px; margin: 0 auto; }
+
+    /* Upload area */
+    .upload-section { background: #141414; border: 2px dashed #333; border-radius: 12px; padding: 40px; text-align: center; margin-bottom: 24px; transition: all 0.2s; cursor: pointer; }
+    .upload-section:hover, .upload-section.dragover { border-color: #4f8fff; background: #1a1a2e; }
+    .upload-section p { color: #888; margin-top: 8px; }
+    .upload-icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* Category selector */
+    .category-section { display: flex; gap: 12px; margin-bottom: 24px; }
+    .category-btn { flex: 1; padding: 14px; background: #1a1a1a; border: 2px solid #333; border-radius: 8px; color: #aaa; cursor: pointer; font-size: 14px; transition: all 0.2s; text-align: center; }
+    .category-btn:hover { border-color: #555; }
+    .category-btn.active { border-color: #4f8fff; color: #4f8fff; background: #1a1a2e; }
+
+    /* Preview */
+    .preview-section { display: none; background: #141414; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .preview-section.visible { display: block; }
+    .preview-img { max-width: 200px; max-height: 200px; border-radius: 8px; object-fit: cover; }
+    .preview-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .preview-info { flex: 1; }
+    .preview-info h3 { color: #fff; margin-bottom: 4px; }
+    .preview-info p { color: #888; font-size: 13px; }
+
+    /* Buttons */
+    .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #4f8fff; color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #3a7ae8; }
+    .btn-success { background: #22c55e; color: #fff; }
+    .btn-success:hover:not(:disabled) { background: #16a34a; }
+    .actions { display: flex; gap: 12px; margin-bottom: 24px; }
+
+    /* Log */
+    .log-section { background: #141414; border-radius: 12px; padding: 20px; }
+    .log-section h3 { color: #fff; margin-bottom: 12px; font-size: 16px; }
+    .log-entry { padding: 8px 12px; border-left: 3px solid #333; margin-bottom: 8px; font-size: 13px; font-family: monospace; }
+    .log-entry.info { border-color: #4f8fff; }
+    .log-entry.success { border-color: #22c55e; }
+    .log-entry.error { border-color: #ef4444; }
+    .log-entry.warning { border-color: #f59e0b; }
+    .log-time { color: #555; margin-right: 8px; }
+
+    /* Results */
+    .results-section { display: none; margin-bottom: 24px; }
+    .results-section.visible { display: block; }
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .result-card { background: #141414; border-radius: 12px; overflow: hidden; }
+    .result-card img, .result-card video { width: 100%; aspect-ratio: 9/16; object-fit: cover; }
+    .result-card .label { padding: 12px; text-align: center; font-size: 13px; color: #aaa; }
+    .btn-video { background: #a855f7; color: #fff; }
+    .btn-video:hover:not(:disabled) { background: #9333ea; }
+
+    /* Spinner */
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #4f8fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    input[type="file"] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Video Builder</h1>
+    <p class="subtitle">Panel de pruebas - Sube una imagen de producto para generar contenido</p>
+
+    <!-- Category -->
+    <div class="category-section">
+      <div class="category-btn active" data-cat="necklace">Collares</div>
+      <div class="category-btn" data-cat="bracelet">Brazaletes</div>
+      <div class="category-btn" data-cat="home_stones">Hogar</div>
+    </div>
+
+    <!-- Stone Name -->
+    <div style="margin-bottom: 24px;">
+      <input type="text" id="stoneName" placeholder="Nombre de la piedra (ej: Amatista, Cuarzo Rosa, Obsidiana...)" style="width: 100%; background: #141414; border: 2px solid #333; border-radius: 8px; padding: 14px 16px; color: #fff; font-size: 14px; transition: border-color 0.2s;" onfocus="this.style.borderColor='#4f8fff'" onblur="this.style.borderColor='#333'">
+    </div>
+
+    <!-- Upload -->
+    <div class="upload-section" id="dropZone">
+      <div class="upload-icon">📷</div>
+      <p><strong>Arrastra tu imagen aquí</strong> o haz clic para seleccionar</p>
+      <p>JPG, PNG o WebP - Máximo 10MB</p>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-section" id="previewSection">
+      <div class="preview-header">
+        <img id="previewImg" class="preview-img" src="" alt="Preview">
+        <div class="preview-info">
+          <h3 id="fileName"></h3>
+          <p id="fileSize"></p>
+          <p id="jobId" style="color: #4f8fff; margin-top: 4px;"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Test: Job ID directo -->
+    <div style="background: #1a1a1a; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 16px; display: flex; gap: 8px; align-items: center;">
+      <span style="color: #f59e0b; font-size: 13px; white-space: nowrap;">TEST:</span>
+      <input type="text" id="manualJobId" placeholder="Pega un Job ID existente aquí..." style="flex: 1; background: #0a0a0a; border: 1px solid #333; border-radius: 6px; padding: 8px 12px; color: #fff; font-size: 13px; font-family: monospace;">
+      <button class="btn" id="btnSetJob" style="background: #f59e0b; color: #000; padding: 8px 16px; font-size: 13px;">Usar Job</button>
+      <button class="btn" id="btnSkipImages" style="background: #ef4444; color: #fff; padding: 8px 12px; font-size: 13px;" disabled>Skip img</button>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions" style="flex-wrap: wrap;">
+      <button class="btn btn-primary" id="btnUpload" disabled>1. Subir imagen</button>
+      <button class="btn btn-success" id="btnGenerate" disabled>2. Generar imágenes (Gemini)</button>
+      <button class="btn btn-video" id="btnVideos" disabled>3. Generar videos (Kling)</button>
+      <button class="btn" id="btnAudio" style="background: #ec4899; color: #fff;" disabled>4. Generar Audio (AI)</button>
+      <button class="btn" id="btnRender" style="background: #f97316; color: #fff;" disabled>5. Renderizar (FFmpeg)</button>
+    </div>
+
+    <!-- Results -->
+    <div class="results-section" id="resultsSection">
+      <div class="results-grid">
+        <div class="result-card">
+          <img id="premiumImg" src="" alt="Premium">
+          <div class="label">Fondo Premium</div>
+        </div>
+        <div class="result-card">
+          <img id="modelImg" src="" alt="Model">
+          <div class="label">En Modelo</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Results -->
+    <div class="results-section" id="videoResultsSection">
+      <div class="results-grid">
+        <div class="result-card">
+          <video id="video1" controls></video>
+          <div class="label">Video 1 - Fondo Premium</div>
+        </div>
+        <div class="result-card">
+          <video id="video2" controls></video>
+          <div class="label">Video 2 - En Modelo</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audio Result -->
+    <div class="results-section" id="audioResultsSection">
+      <div style="background: #141414; border-radius: 12px; padding: 20px;">
+        <div class="label" style="font-size: 15px; color: #ec4899; margin-bottom: 12px; font-weight: 600;">Audio Generado</div>
+        <p id="descriptionText" style="color: #ccc; font-size: 14px; line-height: 1.6; margin-bottom: 16px; font-style: italic;"></p>
+        <audio id="audioPlayer" controls style="width: 100%;"></audio>
+      </div>
+    </div>
+
+    <!-- Final Video Result -->
+    <div class="results-section" id="finalVideoSection">
+      <div style="max-width: 450px; margin: 0 auto;">
+        <div class="result-card">
+          <video id="finalVideo" controls style="width: 100%; aspect-ratio: 9/16; object-fit: cover;"></video>
+          <div class="label">Video Final - Renderizado</div>
+          <div style="padding: 0 12px 12px;">
+            <a id="downloadFinalVideo" class="btn btn-success" style="display: block; text-align: center; text-decoration: none;" download="video-final.mp4" href="#">Descargar video</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div class="log-section">
+      <h3>Log</h3>
+      <div id="logContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:3000';
+    let selectedFile = null;
+    let selectedCategory = 'necklace';
+    let currentJobId = null;
+
+    // Manual Job ID (for testing)
+    document.getElementById('btnSetJob').addEventListener('click', () => {
+      const jobId = document.getElementById('manualJobId').value.trim();
+      if (!jobId) { log('error', 'Ingresa un Job ID'); return; }
+      currentJobId = jobId;
+      document.getElementById('jobId').textContent = `Job ID: ${currentJobId}`;
+      document.getElementById('previewSection').classList.add('visible');
+      document.getElementById('btnGenerate').disabled = false;
+      document.getElementById('btnVideos').disabled = false;
+      document.getElementById('btnSkipImages').disabled = false;
+      document.getElementById('btnAudio').disabled = false;
+      document.getElementById('btnRender').disabled = false;
+      log('success', `Job ID manual configurado: ${currentJobId}`);
+    });
+
+    // Skip images (use original as premium+model for testing)
+    document.getElementById('btnSkipImages').addEventListener('click', async () => {
+      if (!currentJobId) return;
+      log('info', 'Copiando imagen original como premium y modelo...');
+      try {
+        const res = await fetch(`${API}/jobs/${currentJobId}/skip-images`, { method: 'POST' });
+        const data = await res.json();
+        if (data.error) { log('error', data.error); return; }
+        log('success', 'Imagen original asignada como premium y modelo');
+        document.getElementById('btnVideos').disabled = false;
+      } catch (err) {
+        log('error', `Error: ${err.message}`);
+      }
+    });
+
+    // Category buttons
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCategory = btn.dataset.cat;
+        log('info', `Categoría: ${selectedCategory}`);
+      });
+    });
+
+    // Drop zone
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+    function handleFile(file) {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        log('error', `Tipo no válido: ${file.type}`);
+        return;
+      }
+      selectedFile = file;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById('previewImg').src = e.target.result;
+        document.getElementById('fileName').textContent = file.name;
+        document.getElementById('fileSize').textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+        document.getElementById('previewSection').classList.add('visible');
+        document.getElementById('btnUpload').disabled = false;
+        document.getElementById('jobId').textContent = '';
+      };
+      reader.readAsDataURL(file);
+      log('info', `Imagen seleccionada: ${file.name}`);
+    }
+
+    // Upload
+    document.getElementById('btnUpload').addEventListener('click', async () => {
+      if (!selectedFile) return;
+      const btn = document.getElementById('btnUpload');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Subiendo...';
+      log('info', 'Subiendo imagen a Supabase Storage...');
+
+      try {
+        const formData = new FormData();
+        formData.append('image', selectedFile);
+        formData.append('productCategory', selectedCategory);
+        const stoneName = document.getElementById('stoneName').value.trim();
+        if (stoneName) {
+          formData.append('stoneName', stoneName);
+        }
+
+        const res = await fetch(`${API}/upload`, { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Upload failed');
+        }
+
+        currentJobId = data.jobId;
+        document.getElementById('jobId').textContent = `Job ID: ${currentJobId}`;
+        log('success', `Imagen subida. Job ID: ${currentJobId}`);
+        log('success', `URL: ${data.originalImageUrl}`);
+        document.getElementById('btnGenerate').disabled = false;
+        document.getElementById('btnSkipImages').disabled = false;
+        btn.textContent = 'Subida completada';
+      } catch (err) {
+        log('error', `Error al subir: ${err.message}`);
+        btn.disabled = false;
+        btn.textContent = '1. Subir imagen';
+      }
+    });
+
+    // Generate images
+    document.getElementById('btnGenerate').addEventListener('click', async () => {
+      if (!currentJobId) return;
+      const btn = document.getElementById('btnGenerate');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Generando con Gemini...';
+      log('info', 'Llamando a Gemini API (esto puede tardar 30-60 segundos)...');
+
+      try {
+        const res = await fetch(`${API}/jobs/${currentJobId}/generate-images`, { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Generation failed');
+        }
+
+        log('success', 'Imágenes generadas correctamente');
+        log('success', `Premium: ${data.premiumImageUrl}`);
+        log('success', `Modelo: ${data.modelImageUrl}`);
+
+        document.getElementById('premiumImg').src = data.premiumImageUrl;
+        document.getElementById('modelImg').src = data.modelImageUrl;
+        document.getElementById('resultsSection').classList.add('visible');
+        document.getElementById('btnVideos').disabled = false;
+        btn.textContent = 'Generación completada';
+      } catch (err) {
+        log('error', `Error al generar: ${err.message}`);
+        btn.disabled = false;
+        btn.textContent = '2. Generar imágenes (Gemini)';
+      }
+    });
+
+    // Generate videos (async with polling)
+    let videoPollInterval = null;
+
+    document.getElementById('btnVideos').addEventListener('click', async () => {
+      if (!currentJobId) return;
+      const btn = document.getElementById('btnVideos');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Iniciando generación...';
+      log('info', 'Enviando solicitud a Kling API (2 videos en paralelo)...');
+
+      try {
+        const res = await fetch(`${API}/jobs/${currentJobId}/generate-videos`, { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Video generation failed');
+        }
+
+        log('success', 'Generación iniciada en background');
+        log('warning', 'Esperando ~3-5 min. Polling cada 5 segundos...');
+        btn.innerHTML = '<span class="spinner"></span>Procesando videos...';
+
+        // Start polling job status
+        let pollCount = 0;
+        videoPollInterval = setInterval(async () => {
+          pollCount++;
+          try {
+            const jobRes = await fetch(`${API}/jobs/${currentJobId}`);
+            const job = await jobRes.json();
+
+            if (pollCount % 6 === 0) {
+              const elapsed = Math.floor(pollCount * 5 / 60);
+              const secs = (pollCount * 5) % 60;
+              log('info', `Status: ${job.status} (${elapsed}m ${secs}s transcurridos)`);
+            }
+
+            if (job.status === 'FAILED') {
+              clearInterval(videoPollInterval);
+              log('error', `Error: ${job.error_message || 'Unknown error'}`);
+              btn.disabled = false;
+              btn.textContent = '3. Generar videos (Kling)';
+              return;
+            }
+
+            if (job.video1_url && job.video2_url) {
+              clearInterval(videoPollInterval);
+              log('success', 'Videos generados correctamente!');
+              log('success', `Video 1: ${job.video1_url}`);
+              log('success', `Video 2: ${job.video2_url}`);
+
+              document.getElementById('video1').src = job.video1_url;
+              document.getElementById('video2').src = job.video2_url;
+              document.getElementById('videoResultsSection').classList.add('visible');
+              document.getElementById('btnAudio').disabled = false;
+              document.getElementById('btnRender').disabled = false;
+              btn.textContent = 'Videos generados';
+              return;
+            }
+          } catch (pollErr) {
+            log('warning', `Error al consultar status: ${pollErr.message}`);
+          }
+        }, 5000);
+
+      } catch (err) {
+        log('error', `Error al iniciar generación: ${err.message}`);
+        btn.disabled = false;
+        btn.textContent = '3. Generar videos (Kling)';
+      }
+    });
+
+    // Generate audio (async with polling)
+    let audioPollInterval = null;
+
+    document.getElementById('btnAudio').addEventListener('click', async () => {
+      if (!currentJobId) return;
+      const btn = document.getElementById('btnAudio');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Generando audio...';
+      log('info', 'Generando descripción con OpenAI + audio con ElevenLabs...');
+
+      try {
+        const res = await fetch(`${API}/jobs/${currentJobId}/generate-audio`, { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Audio generation failed');
+        }
+
+        log('success', 'Generación de audio iniciada en background');
+        btn.innerHTML = '<span class="spinner"></span>Procesando audio...';
+
+        let pollCount = 0;
+        audioPollInterval = setInterval(async () => {
+          pollCount++;
+          try {
+            const jobRes = await fetch(`${API}/jobs/${currentJobId}`);
+            const job = await jobRes.json();
+
+            if (pollCount % 3 === 0) {
+              log('info', `Status: ${job.status} (${pollCount * 3}s transcurridos)`);
+            }
+
+            if (job.status === 'FAILED') {
+              clearInterval(audioPollInterval);
+              log('error', `Error: ${job.error_message || 'Unknown error'}`);
+              btn.disabled = false;
+              btn.textContent = '4. Generar Audio (AI)';
+              return;
+            }
+
+            if (job.audio_url) {
+              clearInterval(audioPollInterval);
+              log('success', 'Audio generado correctamente!');
+              log('success', `Descripción: ${job.description_text}`);
+
+              document.getElementById('descriptionText').textContent = `"${job.description_text}"`;
+              document.getElementById('audioPlayer').src = job.audio_url;
+              document.getElementById('audioResultsSection').classList.add('visible');
+              btn.textContent = 'Audio generado';
+              return;
+            }
+          } catch (pollErr) {
+            log('warning', `Error al consultar status: ${pollErr.message}`);
+          }
+        }, 3000);
+
+      } catch (err) {
+        log('error', `Error al generar audio: ${err.message}`);
+        btn.disabled = false;
+        btn.textContent = '4. Generar Audio (AI)';
+      }
+    });
+
+    // Render final video (async with polling)
+    let renderPollInterval = null;
+
+    document.getElementById('btnRender').addEventListener('click', async () => {
+      if (!currentJobId) return;
+      const btn = document.getElementById('btnRender');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Iniciando renderizado...';
+      log('info', 'Enviando solicitud de renderizado FFmpeg...');
+
+      try {
+        const res = await fetch(`${API}/jobs/${currentJobId}/render`, { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || 'Render failed');
+        }
+
+        log('success', 'Renderizado iniciado en background');
+        btn.innerHTML = '<span class="spinner"></span>Renderizando...';
+
+        let pollCount = 0;
+        renderPollInterval = setInterval(async () => {
+          pollCount++;
+          try {
+            const jobRes = await fetch(`${API}/jobs/${currentJobId}`);
+            const job = await jobRes.json();
+
+            if (pollCount % 4 === 0) {
+              log('info', `Status: ${job.status} (${pollCount * 3}s transcurridos)`);
+            }
+
+            if (job.status === 'FAILED') {
+              clearInterval(renderPollInterval);
+              log('error', `Error: ${job.error_message || 'Unknown error'}`);
+              btn.disabled = false;
+              btn.textContent = '5. Renderizar (FFmpeg)';
+              return;
+            }
+
+            if (job.status === 'COMPLETED' && job.final_video_url) {
+              clearInterval(renderPollInterval);
+              log('success', 'Video final renderizado!');
+              log('success', `Final: ${job.final_video_url}`);
+
+              document.getElementById('finalVideo').src = job.final_video_url;
+              document.getElementById('downloadFinalVideo').href = job.final_video_url;
+              document.getElementById('finalVideoSection').classList.add('visible');
+              btn.textContent = 'Renderizado completo';
+              return;
+            }
+          } catch (pollErr) {
+            log('warning', `Error al consultar status: ${pollErr.message}`);
+          }
+        }, 3000);
+
+      } catch (err) {
+        log('error', `Error al iniciar renderizado: ${err.message}`);
+        btn.disabled = false;
+        btn.textContent = '5. Renderizar (FFmpeg)';
+      }
+    });
+
+    // Logger
+    function log(type, message) {
+      const container = document.getElementById('logContainer');
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.innerHTML = `<span class="log-time">${time}</span>${message}`;
+      container.prepend(entry);
+    }
+
+    log('info', 'Panel listo. Selecciona una categoría y sube una imagen.');
+  </script>
+</body>
+</html>
