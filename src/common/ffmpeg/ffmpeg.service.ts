@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import ffmpeg = require('fluent-ffmpeg');
-import * as ffmpegStatic from 'ffmpeg-static';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const ffmpegStatic: string = require('ffmpeg-static');
 import * as path from 'path';
 
 @Injectable()
