@@ -352,11 +352,16 @@
 
         // Start polling job status
         let pollCount = 0;
+        let pollErrors = 0;
         videoPollInterval = setInterval(async () => {
           pollCount++;
           try {
             const jobRes = await fetch(`${API}/jobs/${currentJobId}`);
-            const job = await jobRes.json();
+            if (!jobRes.ok) throw new Error(`HTTP ${jobRes.status}`);
+            const text = await jobRes.text();
+            if (text.startsWith('<')) throw new Error('Server returned HTML instead of JSON');
+            const job = JSON.parse(text);
+            pollErrors = 0;
 
             if (pollCount % 6 === 0) {
               const elapsed = Math.floor(pollCount * 5 / 60);
@@ -387,7 +392,14 @@
               return;
             }
           } catch (pollErr) {
+            pollErrors++;
             log('warning', `Error al consultar status: ${pollErr.message}`);
+            if (pollErrors >= 5) {
+              clearInterval(videoPollInterval);
+              log('error', 'Polling detenido tras 5 errores consecutivos. El servidor no responde.');
+              btn.disabled = false;
+              btn.textContent = '3. Generar videos (Kling)';
+            }
           }
         }, 5000);
 
@@ -420,11 +432,16 @@
         btn.innerHTML = '<span class="spinner"></span>Procesando audio...';
 
         let pollCount = 0;
+        let pollErrors = 0;
         audioPollInterval = setInterval(async () => {
           pollCount++;
           try {
             const jobRes = await fetch(`${API}/jobs/${currentJobId}`);
-            const job = await jobRes.json();
+            if (!jobRes.ok) throw new Error(`HTTP ${jobRes.status}`);
+            const text = await jobRes.text();
+            if (text.startsWith('<')) throw new Error('Server returned HTML instead of JSON');
+            const job = JSON.parse(text);
+            pollErrors = 0;
 
             if (pollCount % 3 === 0) {
               log('info', `Status: ${job.status} (${pollCount * 3}s transcurridos)`);
@@ -450,7 +467,14 @@
               return;
             }
           } catch (pollErr) {
+            pollErrors++;
             log('warning', `Error al consultar status: ${pollErr.message}`);
+            if (pollErrors >= 5) {
+              clearInterval(audioPollInterval);
+              log('error', 'Polling detenido tras 5 errores consecutivos. El servidor no responde.');
+              btn.disabled = false;
+              btn.textContent = '4. Generar Audio (AI)';
+            }
           }
         }, 3000);
 
@@ -483,11 +507,16 @@
         btn.innerHTML = '<span class="spinner"></span>Renderizando...';
 
         let pollCount = 0;
+        let pollErrors = 0;
         renderPollInterval = setInterval(async () => {
           pollCount++;
           try {
             const jobRes = await fetch(`${API}/jobs/${currentJobId}`);
-            const job = await jobRes.json();
+            if (!jobRes.ok) throw new Error(`HTTP ${jobRes.status}`);
+            const text = await jobRes.text();
+            if (text.startsWith('<')) throw new Error('Server returned HTML instead of JSON');
+            const job = JSON.parse(text);
+            pollErrors = 0;
 
             if (pollCount % 4 === 0) {
               log('info', `Status: ${job.status} (${pollCount * 3}s transcurridos)`);
@@ -513,7 +542,14 @@
               return;
             }
           } catch (pollErr) {
+            pollErrors++;
             log('warning', `Error al consultar status: ${pollErr.message}`);
+            if (pollErrors >= 5) {
+              clearInterval(renderPollInterval);
+              log('error', 'Polling detenido tras 5 errores consecutivos. El servidor no responde.');
+              btn.disabled = false;
+              btn.textContent = '5. Renderizar (FFmpeg)';
+            }
           }
         }, 3000);
 
