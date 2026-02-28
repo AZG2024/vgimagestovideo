@@ -128,10 +128,16 @@
         <div class="result-card">
           <img id="premiumImg" src="" alt="Premium">
           <div class="label">Fondo Premium</div>
+          <div style="padding: 0 12px 12px;">
+            <a id="downloadPremiumImg" class="btn btn-success" style="display: block; text-align: center; text-decoration: none; font-size: 12px; padding: 8px;" download="imagen-premium.png" href="#">Descargar</a>
+          </div>
         </div>
         <div class="result-card">
           <img id="modelImg" src="" alt="Model">
           <div class="label">En Modelo</div>
+          <div style="padding: 0 12px 12px;">
+            <a id="downloadModelImg" class="btn btn-success" style="display: block; text-align: center; text-decoration: none; font-size: 12px; padding: 8px;" download="imagen-modelo.png" href="#">Descargar</a>
+          </div>
         </div>
       </div>
     </div>
@@ -142,10 +148,16 @@
         <div class="result-card">
           <video id="video1" controls></video>
           <div class="label">Video 1 - Fondo Premium</div>
+          <div style="padding: 0 12px 12px;">
+            <a id="downloadVideo1" class="btn btn-video" style="display: block; text-align: center; text-decoration: none; font-size: 12px; padding: 8px;" download="video1.mp4" href="#">Descargar</a>
+          </div>
         </div>
         <div class="result-card">
           <video id="video2" controls></video>
           <div class="label">Video 2 - En Modelo</div>
+          <div style="padding: 0 12px 12px;">
+            <a id="downloadVideo2" class="btn btn-video" style="display: block; text-align: center; text-decoration: none; font-size: 12px; padding: 8px;" download="video2.mp4" href="#">Descargar</a>
+          </div>
         </div>
       </div>
     </div>
@@ -156,6 +168,9 @@
         <div class="label" style="font-size: 15px; color: #ec4899; margin-bottom: 12px; font-weight: 600;">Audio Generado</div>
         <p id="descriptionText" style="color: #ccc; font-size: 14px; line-height: 1.6; margin-bottom: 16px; font-style: italic;"></p>
         <audio id="audioPlayer" controls style="width: 100%;"></audio>
+        <div style="margin-top: 12px;">
+          <a id="downloadAudio" class="btn" style="display: block; text-align: center; text-decoration: none; font-size: 12px; padding: 8px; background: #ec4899; color: #fff;" download="audio.mp3" href="#">Descargar audio</a>
+        </div>
       </div>
     </div>
 
@@ -318,6 +333,8 @@
 
         document.getElementById('premiumImg').src = data.premiumImageUrl;
         document.getElementById('modelImg').src = data.modelImageUrl;
+        document.getElementById('downloadPremiumImg').href = data.premiumImageUrl;
+        document.getElementById('downloadModelImg').href = data.modelImageUrl;
         document.getElementById('resultsSection').classList.add('visible');
         document.getElementById('btnVideos').disabled = false;
         btn.textContent = 'Generación completada';
@@ -385,6 +402,8 @@
 
               document.getElementById('video1').src = job.video1_url;
               document.getElementById('video2').src = job.video2_url;
+              document.getElementById('downloadVideo1').href = job.video1_url;
+              document.getElementById('downloadVideo2').href = job.video2_url;
               document.getElementById('videoResultsSection').classList.add('visible');
               document.getElementById('btnAudio').disabled = false;
               document.getElementById('btnRender').disabled = false;
@@ -462,6 +481,7 @@
 
               document.getElementById('descriptionText').textContent = `"${job.description_text}"`;
               document.getElementById('audioPlayer').src = job.audio_url;
+              document.getElementById('downloadAudio').href = job.audio_url;
               document.getElementById('audioResultsSection').classList.add('visible');
               btn.textContent = 'Audio generado';
               return;
