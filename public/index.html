@@ -180,7 +180,7 @@
   </div>
 
   <script>
-    const API = 'http://localhost:3000';
+    const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
     let selectedFile = null;
     let selectedCategory = 'necklace';
     let currentJobId = null;
