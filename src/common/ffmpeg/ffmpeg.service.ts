@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import ffmpeg = require('fluent-ffmpeg');
+import * as ffmpegStatic from 'ffmpeg-static';
 import * as path from 'path';
 
 @Injectable()
@@ -10,7 +11,7 @@ export class FfmpegService implements OnModuleInit {
   constructor(private readonly configService: ConfigService) {}
 
   onModuleInit() {
-    const ffmpegPath = this.configService.get<string>('FFMPEG_PATH');
+    const ffmpegPath = this.configService.get<string>('FFMPEG_PATH') || ffmpegStatic;
     if (ffmpegPath) {
       ffmpeg.setFfmpegPath(ffmpegPath);
       this.logger.log(`FFmpeg path set to: ${ffmpegPath}`);
