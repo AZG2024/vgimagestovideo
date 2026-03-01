@@ -98,7 +98,7 @@ let VideoRenderingService = VideoRenderingService_1 = class VideoRenderingServic
             }
             await Promise.all(downloads);
             this.logger.log(`Job ${jobId}: Starting FFmpeg rendering (voice: ${hasVoiceover}, music: ${hasBgMusic})...`);
-            await this.ffmpegService.renderFinalVideo(video1Path, video2Path, video2Path, outputPath, hasVoiceover ? voiceoverPath : undefined, hasBgMusic ? bgMusicPath : undefined, 1, 5, 8);
+            await this.ffmpegService.renderFinalVideo(video1Path, video2Path, video1Path, outputPath, hasVoiceover ? voiceoverPath : undefined, hasBgMusic ? bgMusicPath : undefined);
             this.logger.log(`Job ${jobId}: Uploading final video...`);
             const bucket = this.configService.get('STORAGE_BUCKET');
             const finalBuffer = fs.readFileSync(outputPath);

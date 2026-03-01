@@ -122,13 +122,44 @@ let GeminiService = GeminiService_1 = class GeminiService {
                     const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
                     this.logger.log(`Veo polling... elapsed=${elapsed}s, done=${operation.done}`);
                 }
-                const generatedVideo = operation.response?.generatedVideos?.[0];
-                if (!generatedVideo?.video?.videoBytes) {
-                    throw new Error('Veo operation completed but no video bytes found');
+                const response = operation.response;
+                this.logger.log(`Veo response keys: ${JSON.stringify(Object.keys(response || {}))}`);
+                const generatedVideo = response?.generatedVideos?.[0];
+                if (!generatedVideo) {
+                    this.logger.error(`Veo full response: ${JSON.stringify(response, null, 2).substring(0, 2000)}`);
+                    throw new Error('Veo operation completed but no generated video found');
                 }
-                const videoBuffer = Buffer.from(generatedVideo.video.videoBytes, 'base64');
-                this.logger.log(`Video generated successfully (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
-                return videoBuffer;
+                this.logger.log(`Generated video keys: ${JSON.stringify(Object.keys(generatedVideo || {}))}`);
+                if (generatedVideo.video?.videoBytes) {
+                    const videoBuffer = Buffer.from(generatedVideo.video.videoBytes, 'base64');
+                    this.logger.log(`Video generated successfully via bytes (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
+                    return videoBuffer;
+                }
+                const videoUri = generatedVideo.video?.uri || generatedVideo.uri;
+                if (videoUri) {
+                    this.logger.log(`Video available at URI: ${videoUri}, downloading...`);
+                    const apiKey = this.configService.get('GEMINI_API_KEY');
+                    let downloadUrl = videoUri;
+                    if (downloadUrl.includes('generativelanguage.googleapis.com')) {
+                        const separator = downloadUrl.includes('?') ? '&' : '?';
+                        downloadUrl = `${downloadUrl}${separator}key=${apiKey}`;
+                    }
+                    const videoResponse = await fetch(downloadUrl, {
+                        headers: {
+                            'x-goog-api-key': apiKey,
+                        },
+                    });
+                    if (!videoResponse.ok) {
+                        const errorBody = await videoResponse.text();
+                        this.logger.error(`Download failed (${videoResponse.status}): ${errorBody.substring(0, 500)}`);
+                        throw new Error(`Failed to download video from URI: ${videoResponse.status} ${videoResponse.statusText}`);
+                    }
+                    const videoBuffer = Buffer.from(await videoResponse.arrayBuffer());
+                    this.logger.log(`Video downloaded successfully (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
+                    return videoBuffer;
+                }
+                this.logger.error(`Veo generatedVideo structure: ${JSON.stringify(generatedVideo, null, 2).substring(0, 2000)}`);
+                throw new Error('Veo operation completed but no video bytes or URI found');
             }
             catch (error) {
                 lastError = error instanceof Error ? error : new Error(String(error));
