@@ -88,7 +88,7 @@ export class GeminiService implements OnModuleInit {
   async generateVideoFromImage(
     imageUrl: string,
     prompt: string,
-    durationSeconds: 5 | 6 | 7 | 8 = 8,
+    durationSeconds: 4 | 6 | 8 = 8,
     aspectRatio: '9:16' | '16:9' | '1:1' = '9:16',
   ): Promise<Buffer> {
     // Download image from public URL
@@ -180,7 +180,7 @@ export class GeminiService implements OnModuleInit {
     tasks: Array<{
       imageUrl: string;
       prompt: string;
-      durationSeconds: 5 | 6 | 7 | 8;
+      durationSeconds: 4 | 6 | 8;
     }>,
   ): Promise<Buffer[]> {
     this.logger.log(`Starting ${tasks.length} Veo video generations in parallel...`);

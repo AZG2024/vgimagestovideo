@@ -36,7 +36,7 @@ export class VideoGenerationService {
       this.logger.log(`Job ${jobId}: Model image URL: ${job.model_image_url}`);
       this.logger.log(`Job ${jobId}: Generating 2 videos in parallel via Veo 3.1...`);
       const [video1Buffer, video2Buffer] = await this.geminiService.generateVideosFromImagesParallel([
-        { imageUrl: job.premium_image_url, prompt: VIDEO_PROMPT_PREMIUM, durationSeconds: 5 },
+        { imageUrl: job.premium_image_url, prompt: VIDEO_PROMPT_PREMIUM, durationSeconds: 6 },
         { imageUrl: job.model_image_url, prompt: VIDEO_PROMPT_MODEL, durationSeconds: 8 },
       ]);
 

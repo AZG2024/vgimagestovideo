@@ -65,17 +65,17 @@ export class VideoRenderingService {
 
       await Promise.all(downloads);
 
-      // Render with FFmpeg: video1(5s) → video2(8s) → video2(8s) = ~19s with 2 crossfades
+      // Render with FFmpeg: video1(6s) → video2(8s) → video2(8s) = ~20s with 2 crossfades
       this.logger.log(`Job ${jobId}: Starting FFmpeg rendering (voice: ${hasVoiceover}, music: ${hasBgMusic})...`);
       await this.ffmpegService.renderFinalVideo(
         video1Path,
         video2Path,
-        video2Path,  // reuse video2 as third clip for ~19s total
+        video2Path,  // reuse video2 as third clip
         outputPath,
         hasVoiceover ? voiceoverPath : undefined,
         hasBgMusic ? bgMusicPath : undefined,
         1,   // transitionDuration
-        5,   // video1Duration
+        6,   // video1Duration
         8,   // video2Duration
       );
 
