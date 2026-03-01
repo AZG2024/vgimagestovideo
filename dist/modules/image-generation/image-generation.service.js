@@ -19,8 +19,14 @@ const jobs_service_1 = require("../jobs/jobs.service");
 const necklace_prompts_1 = require("./prompts/necklace.prompts");
 const PROMPTS_BY_CATEGORY = {
     necklace: {
-        premium: necklace_prompts_1.NECKLACE_PREMIUM_PROMPT,
-        model: necklace_prompts_1.NECKLACE_MODEL_PROMPT,
+        '9:16': {
+            premium: necklace_prompts_1.NECKLACE_PREMIUM_PROMPT,
+            model: necklace_prompts_1.NECKLACE_MODEL_PROMPT,
+        },
+        '1:1': {
+            premium: necklace_prompts_1.NECKLACE_PREMIUM_PROMPT_SQUARE,
+            model: necklace_prompts_1.NECKLACE_MODEL_PROMPT_SQUARE,
+        },
     },
 };
 let ImageGenerationService = ImageGenerationService_1 = class ImageGenerationService {
@@ -35,23 +41,25 @@ let ImageGenerationService = ImageGenerationService_1 = class ImageGenerationSer
         this.jobsService = jobsService;
         this.configService = configService;
     }
-    async generateImages(jobId) {
+    async generateImages(jobId, aspectRatio = '9:16') {
         const startTime = Date.now();
         const job = await this.jobsService.findById(jobId);
         if (!job.original_image_url) {
             throw new Error(`Job ${jobId} has no original image`);
         }
-        const prompts = PROMPTS_BY_CATEGORY[job.product_category];
-        if (!prompts) {
+        const categoryPrompts = PROMPTS_BY_CATEGORY[job.product_category];
+        if (!categoryPrompts) {
             throw new Error(`No prompts configured for category: ${job.product_category}`);
         }
+        const prompts = categoryPrompts[aspectRatio] || categoryPrompts['9:16'];
+        this.logger.log(`Job ${jobId}: Using ${aspectRatio} prompts for ${job.product_category}`);
         await this.jobsService.updateStatus(jobId, 'PROCESSING_IMAGES');
         try {
             const originalImage = await this.downloadImage(job.original_image_url);
-            this.logger.log(`Job ${jobId}: Generating premium image...`);
-            const premiumBuffer = await this.geminiService.generateImageFromImage(originalImage.buffer, originalImage.mimeType, prompts.premium, '9:16');
-            this.logger.log(`Job ${jobId}: Generating model image...`);
-            const modelBuffer = await this.geminiService.generateImageFromImage(originalImage.buffer, originalImage.mimeType, prompts.model, '9:16');
+            this.logger.log(`Job ${jobId}: Generating premium image (${aspectRatio})...`);
+            const premiumBuffer = await this.geminiService.generateImageFromImage(originalImage.buffer, originalImage.mimeType, prompts.premium, aspectRatio === '1:1' ? '1:1' : '9:16');
+            this.logger.log(`Job ${jobId}: Generating model image (${aspectRatio})...`);
+            const modelBuffer = await this.geminiService.generateImageFromImage(originalImage.buffer, originalImage.mimeType, prompts.model, aspectRatio === '1:1' ? '1:1' : '9:16');
             const bucket = this.configService.get('STORAGE_BUCKET');
             const premiumImageUrl = await this.uploadImage(bucket, `${jobId}/premium.png`, premiumBuffer);
             const modelImageUrl = await this.uploadImage(bucket, `${jobId}/model.png`, modelBuffer);

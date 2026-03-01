@@ -20,16 +20,18 @@ let ImageGenerationController = class ImageGenerationController {
     constructor(imageGenerationService) {
         this.imageGenerationService = imageGenerationService;
     }
-    async generateImages(id) {
-        return this.imageGenerationService.generateImages(id);
+    async generateImages(id, ratio) {
+        const aspectRatio = ratio === '1:1' ? '1:1' : '9:16';
+        return this.imageGenerationService.generateImages(id, aspectRatio);
     }
 };
 exports.ImageGenerationController = ImageGenerationController;
 __decorate([
     (0, common_1.Post)(':id/generate-images'),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Query)('ratio')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], ImageGenerationController.prototype, "generateImages", null);
 exports.ImageGenerationController = ImageGenerationController = __decorate([

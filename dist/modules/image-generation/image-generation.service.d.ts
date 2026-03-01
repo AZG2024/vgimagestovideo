@@ -9,7 +9,7 @@ export declare class ImageGenerationService {
     private readonly configService;
     private readonly logger;
     constructor(geminiService: GeminiService, supabaseService: SupabaseService, jobsService: JobsService, configService: ConfigService);
-    generateImages(jobId: string): Promise<{
+    generateImages(jobId: string, aspectRatio?: string): Promise<{
         premiumImageUrl: string;
         modelImageUrl: string;
     }>;
