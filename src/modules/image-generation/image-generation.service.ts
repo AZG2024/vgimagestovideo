@@ -6,6 +6,8 @@ import { JobsService } from '../jobs/jobs.service';
 import {
   NECKLACE_PREMIUM_PROMPT,
   NECKLACE_MODEL_PROMPT,
+  NECKLACE_PREMIUM_PROMPT_SQUARE,
+  NECKLACE_MODEL_PROMPT_SQUARE,
 } from './prompts/necklace.prompts';
 
 interface CategoryPrompts {
@@ -13,10 +15,16 @@ interface CategoryPrompts {
   model: string;
 }
 
-const PROMPTS_BY_CATEGORY: Record<string, CategoryPrompts> = {
+const PROMPTS_BY_CATEGORY: Record<string, Record<string, CategoryPrompts>> = {
   necklace: {
-    premium: NECKLACE_PREMIUM_PROMPT,
-    model: NECKLACE_MODEL_PROMPT,
+    '9:16': {
+      premium: NECKLACE_PREMIUM_PROMPT,
+      model: NECKLACE_MODEL_PROMPT,
+    },
+    '1:1': {
+      premium: NECKLACE_PREMIUM_PROMPT_SQUARE,
+      model: NECKLACE_MODEL_PROMPT_SQUARE,
+    },
   },
   // bracelet and home_stones will be added later
 };
@@ -32,7 +40,7 @@ export class ImageGenerationService {
     private readonly configService: ConfigService,
   ) {}
 
-  async generateImages(jobId: string): Promise<{
+  async generateImages(jobId: string, aspectRatio: string = '9:16'): Promise<{
     premiumImageUrl: string;
     modelImageUrl: string;
   }> {
@@ -44,12 +52,15 @@ export class ImageGenerationService {
       throw new Error(`Job ${jobId} has no original image`);
     }
 
-    const prompts = PROMPTS_BY_CATEGORY[job.product_category];
-    if (!prompts) {
+    const categoryPrompts = PROMPTS_BY_CATEGORY[job.product_category];
+    if (!categoryPrompts) {
       throw new Error(
         `No prompts configured for category: ${job.product_category}`,
       );
     }
+
+    const prompts = categoryPrompts[aspectRatio] || categoryPrompts['9:16'];
+    this.logger.log(`Job ${jobId}: Using ${aspectRatio} prompts for ${job.product_category}`);
 
     await this.jobsService.updateStatus(jobId, 'PROCESSING_IMAGES');
 
@@ -58,21 +69,21 @@ export class ImageGenerationService {
       const originalImage = await this.downloadImage(job.original_image_url);
 
       // Generate premium background image
-      this.logger.log(`Job ${jobId}: Generating premium image...`);
+      this.logger.log(`Job ${jobId}: Generating premium image (${aspectRatio})...`);
       const premiumBuffer = await this.geminiService.generateImageFromImage(
         originalImage.buffer,
         originalImage.mimeType,
         prompts.premium,
-        '9:16',
+        aspectRatio === '1:1' ? '1:1' : '9:16',
       );
 
       // Generate model image
-      this.logger.log(`Job ${jobId}: Generating model image...`);
+      this.logger.log(`Job ${jobId}: Generating model image (${aspectRatio})...`);
       const modelBuffer = await this.geminiService.generateImageFromImage(
         originalImage.buffer,
         originalImage.mimeType,
         prompts.model,
-        '9:16',
+        aspectRatio === '1:1' ? '1:1' : '9:16',
       );
 
       // Upload both images to storage

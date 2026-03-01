@@ -1,4 +1,4 @@
-import { Controller, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { Controller, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
 import { ImageGenerationService } from './image-generation.service';
 
 @Controller('jobs')
@@ -8,7 +8,11 @@ export class ImageGenerationController {
   ) {}
 
   @Post(':id/generate-images')
-  async generateImages(@Param('id', ParseUUIDPipe) id: string) {
-    return this.imageGenerationService.generateImages(id);
+  async generateImages(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('ratio') ratio?: string,
+  ) {
+    const aspectRatio = ratio === '1:1' ? '1:1' : '9:16';
+    return this.imageGenerationService.generateImages(id, aspectRatio);
   }
 }

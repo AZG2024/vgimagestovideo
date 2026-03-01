@@ -649,7 +649,7 @@ document.getElementById('btnGenerate').addEventListener('click', async () => {
   log('info', 'Calling Gemini API...');
 
   try {
-    const res = await fetch(`${API}/jobs/${currentJobId}/generate-images`, { method: 'POST' });
+    const res = await fetch(`${API}/jobs/${currentJobId}/generate-images?ratio=${selectedRatio}`, { method: 'POST' });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Generation failed');
 
