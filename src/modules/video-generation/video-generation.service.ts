@@ -31,14 +31,19 @@ export class VideoGenerationService {
     try {
       const bucket = this.configService.get<string>('STORAGE_BUCKET')!;
 
-      // Generate both videos in parallel with WaveSpeed (Kling)
+      // Generate videos sequentially with WaveSpeed (Kling O1 - economical)
       this.logger.log(`Job ${jobId}: Premium image URL: ${job.premium_image_url}`);
       this.logger.log(`Job ${jobId}: Model image URL: ${job.model_image_url}`);
-      this.logger.log(`Job ${jobId}: Generating 2 videos in parallel via WaveSpeed/Kling...`);
-      const [video1WsUrl, video2WsUrl] = await this.waveSpeedService.generateVideosParallel([
-        { imageUrl: job.premium_image_url, prompt: VIDEO_PROMPT_PREMIUM, duration: 5 },
-        { imageUrl: job.model_image_url, prompt: VIDEO_PROMPT_MODEL, duration: 10 },
-      ]);
+
+      this.logger.log(`Job ${jobId}: Generating video 1 (premium) via Kling O1...`);
+      const video1WsUrl = await this.waveSpeedService.generateVideo(
+        job.premium_image_url, VIDEO_PROMPT_PREMIUM, 5,
+      );
+
+      this.logger.log(`Job ${jobId}: Generating video 2 (model) via Kling O1...`);
+      const video2WsUrl = await this.waveSpeedService.generateVideo(
+        job.model_image_url, VIDEO_PROMPT_MODEL, 10,
+      );
 
       // Download and upload both videos in parallel
       this.logger.log(`Job ${jobId}: Both videos ready, uploading to storage...`);
