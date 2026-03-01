@@ -75,6 +75,74 @@ let GeminiService = GeminiService_1 = class GeminiService {
         }
         throw lastError ?? new Error('Image generation failed');
     }
+    async generateVideoFromImage(imageUrl, prompt, durationSeconds = 8, aspectRatio = '9:16') {
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) {
+            throw new Error(`Failed to download image: ${imageResponse.statusText}`);
+        }
+        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+        const base64Image = imageBuffer.toString('base64');
+        const mimeType = imageUrl.endsWith('.jpg') || imageUrl.endsWith('.jpeg')
+            ? 'image/jpeg'
+            : 'image/png';
+        this.logger.log(`Veo 3.1: Generating ${durationSeconds}s video (${aspectRatio}) from image (${(imageBuffer.length / 1024).toFixed(0)}KB)`);
+        const maxRetries = 1;
+        let lastError;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                if (attempt > 0) {
+                    this.logger.warn(`Retry attempt ${attempt} for video generation`);
+                    await this.delay(5000 * attempt);
+                }
+                let operation = await this.ai.models.generateVideos({
+                    model: 'veo-3.1-generate-preview',
+                    prompt,
+                    image: {
+                        imageBytes: base64Image,
+                        mimeType,
+                    },
+                    config: {
+                        aspectRatio,
+                        durationSeconds,
+                        numberOfVideos: 1,
+                    },
+                });
+                const maxWaitMs = 10 * 60 * 1000;
+                const startTime = Date.now();
+                let pollInterval = 5000;
+                while (!operation.done) {
+                    if (Date.now() - startTime > maxWaitMs) {
+                        throw new Error('Veo video generation timed out after 10 minutes');
+                    }
+                    await this.delay(pollInterval);
+                    operation = await this.ai.operations.getVideosOperation({
+                        operation,
+                    });
+                    pollInterval = Math.min(pollInterval * 1.5, 15000);
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+                    this.logger.log(`Veo polling... elapsed=${elapsed}s, done=${operation.done}`);
+                }
+                const generatedVideo = operation.response?.generatedVideos?.[0];
+                if (!generatedVideo?.video?.videoBytes) {
+                    throw new Error('Veo operation completed but no video bytes found');
+                }
+                const videoBuffer = Buffer.from(generatedVideo.video.videoBytes, 'base64');
+                this.logger.log(`Video generated successfully (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
+                return videoBuffer;
+            }
+            catch (error) {
+                lastError = error instanceof Error ? error : new Error(String(error));
+                this.logger.error(`Video generation failed (attempt ${attempt + 1}): ${lastError.message}`);
+            }
+        }
+        throw lastError ?? new Error('Video generation failed');
+    }
+    async generateVideosFromImagesParallel(tasks) {
+        this.logger.log(`Starting ${tasks.length} Veo video generations in parallel...`);
+        const results = await Promise.all(tasks.map((t) => this.generateVideoFromImage(t.imageUrl, t.prompt, t.durationSeconds)));
+        this.logger.log(`All ${tasks.length} videos generated successfully`);
+        return results;
+    }
     delay(ms) {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }

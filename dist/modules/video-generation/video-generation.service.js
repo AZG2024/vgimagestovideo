@@ -13,19 +13,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.VideoGenerationService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
-const wavespeed_service_1 = require("../../common/wavespeed/wavespeed.service");
+const gemini_service_1 = require("../../common/gemini/gemini.service");
 const supabase_service_1 = require("../../common/supabase/supabase.service");
 const jobs_service_1 = require("../jobs/jobs.service");
 const VIDEO_PROMPT_PREMIUM = 'Smooth cinematic camera movement, slow zoom in with gentle panning, professional product showcase, elegant lighting transitions, luxury commercial feel';
 const VIDEO_PROMPT_MODEL = 'A female model wearing the necklace around her neck, smooth cinematic camera movement, gentle panning around the model, professional fashion showcase, elegant studio lighting, luxury e-commerce feel';
 let VideoGenerationService = VideoGenerationService_1 = class VideoGenerationService {
-    waveSpeedService;
+    geminiService;
     supabaseService;
     jobsService;
     configService;
     logger = new common_1.Logger(VideoGenerationService_1.name);
-    constructor(waveSpeedService, supabaseService, jobsService, configService) {
-        this.waveSpeedService = waveSpeedService;
+    constructor(geminiService, supabaseService, jobsService, configService) {
+        this.geminiService = geminiService;
         this.supabaseService = supabaseService;
         this.jobsService = jobsService;
         this.configService = configService;
@@ -41,15 +41,15 @@ let VideoGenerationService = VideoGenerationService_1 = class VideoGenerationSer
             const bucket = this.configService.get('STORAGE_BUCKET');
             this.logger.log(`Job ${jobId}: Premium image URL: ${job.premium_image_url}`);
             this.logger.log(`Job ${jobId}: Model image URL: ${job.model_image_url}`);
-            this.logger.log(`Job ${jobId}: Generating 2 videos in parallel via WaveSpeed...`);
-            const [video1WsUrl, video2WsUrl] = await this.waveSpeedService.generateVideosParallel([
-                { imageUrl: job.premium_image_url, prompt: VIDEO_PROMPT_PREMIUM, duration: 5 },
-                { imageUrl: job.model_image_url, prompt: VIDEO_PROMPT_MODEL, duration: 10 },
+            this.logger.log(`Job ${jobId}: Generating 2 videos in parallel via Veo 3.1...`);
+            const [video1Buffer, video2Buffer] = await this.geminiService.generateVideosFromImagesParallel([
+                { imageUrl: job.premium_image_url, prompt: VIDEO_PROMPT_PREMIUM, durationSeconds: 5 },
+                { imageUrl: job.model_image_url, prompt: VIDEO_PROMPT_MODEL, durationSeconds: 8 },
             ]);
             this.logger.log(`Job ${jobId}: Both videos ready, uploading to storage...`);
             const [video1Url, video2Url] = await Promise.all([
-                this.retryOperation(() => this.downloadAndUpload(video1WsUrl, bucket, `${jobId}/video1.mp4`), 'download/upload video 1'),
-                this.retryOperation(() => this.downloadAndUpload(video2WsUrl, bucket, `${jobId}/video2.mp4`), 'download/upload video 2'),
+                this.retryOperation(() => this.uploadBuffer(video1Buffer, bucket, `${jobId}/video1.mp4`), 'upload video 1'),
+                this.retryOperation(() => this.uploadBuffer(video2Buffer, bucket, `${jobId}/video2.mp4`), 'upload video 2'),
             ]);
             await this.retryOperation(() => this.jobsService.updateStatus(jobId, 'PENDING', {
                 video1_url: video1Url,
@@ -90,13 +90,7 @@ let VideoGenerationService = VideoGenerationService_1 = class VideoGenerationSer
         }
         throw new Error(`Unreachable`);
     }
-    async downloadAndUpload(sourceUrl, bucket, path) {
-        const response = await fetch(sourceUrl);
-        if (!response.ok) {
-            throw new Error(`Failed to download video: ${response.statusText}`);
-        }
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
+    async uploadBuffer(buffer, bucket, path) {
         this.logger.log(`Uploading ${path} (${(buffer.length / 1024 / 1024).toFixed(1)}MB)`);
         const { error } = await this.supabaseService
             .getClient()
@@ -114,11 +108,20 @@ let VideoGenerationService = VideoGenerationService_1 = class VideoGenerationSer
             .getPublicUrl(path);
         return data.publicUrl;
     }
+    async downloadAndUpload(sourceUrl, bucket, path) {
+        const response = await fetch(sourceUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to download video: ${response.statusText}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        return this.uploadBuffer(buffer, bucket, path);
+    }
 };
 exports.VideoGenerationService = VideoGenerationService;
 exports.VideoGenerationService = VideoGenerationService = VideoGenerationService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [wavespeed_service_1.WaveSpeedService,
+    __metadata("design:paramtypes", [gemini_service_1.GeminiService,
         supabase_service_1.SupabaseService,
         jobs_service_1.JobsService,
         config_1.ConfigService])

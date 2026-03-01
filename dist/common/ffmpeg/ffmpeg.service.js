@@ -47,6 +47,7 @@ exports.FfmpegService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const ffmpeg = require("fluent-ffmpeg");
+const ffmpegStatic = require('ffmpeg-static');
 const path = __importStar(require("path"));
 let FfmpegService = FfmpegService_1 = class FfmpegService {
     configService;
@@ -55,7 +56,7 @@ let FfmpegService = FfmpegService_1 = class FfmpegService {
         this.configService = configService;
     }
     onModuleInit() {
-        const ffmpegPath = this.configService.get('FFMPEG_PATH');
+        const ffmpegPath = this.configService.get('FFMPEG_PATH') || ffmpegStatic;
         if (ffmpegPath) {
             ffmpeg.setFfmpegPath(ffmpegPath);
             this.logger.log(`FFmpeg path set to: ${ffmpegPath}`);
