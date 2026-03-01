@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GeminiService } from '../../common/gemini/gemini.service';
+import { WaveSpeedService } from '../../common/wavespeed/wavespeed.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { JobsService } from '../jobs/jobs.service';
 
@@ -12,7 +12,7 @@ export class VideoGenerationService {
   private readonly logger = new Logger(VideoGenerationService.name);
 
   constructor(
-    private readonly geminiService: GeminiService,
+    private readonly waveSpeedService: WaveSpeedService,
     private readonly supabaseService: SupabaseService,
     private readonly jobsService: JobsService,
     private readonly configService: ConfigService,
@@ -31,25 +31,25 @@ export class VideoGenerationService {
     try {
       const bucket = this.configService.get<string>('STORAGE_BUCKET')!;
 
-      // Generate both videos in parallel with Veo 3.1
+      // Generate both videos in parallel with WaveSpeed (Kling)
       this.logger.log(`Job ${jobId}: Premium image URL: ${job.premium_image_url}`);
       this.logger.log(`Job ${jobId}: Model image URL: ${job.model_image_url}`);
-      this.logger.log(`Job ${jobId}: Generating 2 videos in parallel via Veo 3.1...`);
-      const [video1Buffer, video2Buffer] = await this.geminiService.generateVideosFromImagesParallel([
-        { imageUrl: job.premium_image_url, prompt: VIDEO_PROMPT_PREMIUM, durationSeconds: 6 },
-        { imageUrl: job.model_image_url, prompt: VIDEO_PROMPT_MODEL, durationSeconds: 8 },
+      this.logger.log(`Job ${jobId}: Generating 2 videos in parallel via WaveSpeed/Kling...`);
+      const [video1WsUrl, video2WsUrl] = await this.waveSpeedService.generateVideosParallel([
+        { imageUrl: job.premium_image_url, prompt: VIDEO_PROMPT_PREMIUM, duration: 5 },
+        { imageUrl: job.model_image_url, prompt: VIDEO_PROMPT_MODEL, duration: 10 },
       ]);
 
-      // Upload both video buffers in parallel
+      // Download and upload both videos in parallel
       this.logger.log(`Job ${jobId}: Both videos ready, uploading to storage...`);
       const [video1Url, video2Url] = await Promise.all([
         this.retryOperation(
-          () => this.uploadBuffer(video1Buffer, bucket, `${jobId}/video1.mp4`),
-          'upload video 1',
+          () => this.downloadAndUpload(video1WsUrl, bucket, `${jobId}/video1.mp4`),
+          'download/upload video 1',
         ),
         this.retryOperation(
-          () => this.uploadBuffer(video2Buffer, bucket, `${jobId}/video2.mp4`),
-          'upload video 2',
+          () => this.downloadAndUpload(video2WsUrl, bucket, `${jobId}/video2.mp4`),
+          'download/upload video 2',
         ),
       ]);
 
