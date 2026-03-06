@@ -902,16 +902,16 @@ document.getElementById('btnRender').addEventListener('click', async () => {
       } catch (pollErr) {
         pollErrors++;
         log('warning', `Poll error: ${pollErr.message}`);
-        if (pollErrors >= 5) {
+        if (pollErrors >= 10) {
           clearInterval(renderPollInterval);
-          log('error', 'Polling stopped after 5 errors');
+          log('error', 'Polling stopped after 10 errors');
           setStepState(5, 'failed');
           btn.disabled = false;
           btn.innerHTML = '<span class="material-symbols-outlined text-base">play_circle</span> Render Video';
           setStatus('Error', 'red');
         }
       }
-    }, 3000);
+    }, 5000);
   } catch (err) {
     log('error', `Error: ${err.message}`);
     setStepState(5, 'failed');

@@ -62,10 +62,13 @@ export class FfmpegService implements OnModuleInit {
       if (voiceoverPath) cmd.input(voiceoverPath);
       if (bgMusicPath) cmd.input(bgMusicPath);
 
-      // Build complex filter: 2 chained crossfades
+      // Build complex filter: scale inputs + 2 chained crossfades
       const filters: string[] = [
-        `[0:v][1:v]xfade=transition=fade:duration=${transitionDuration}:offset=${offset1}[v01]`,
-        `[v01][2:v]xfade=transition=fade:duration=${transitionDuration}:offset=${offset2},format=yuv420p[v]`,
+        `[0:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1[v0]`,
+        `[1:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1[v1]`,
+        `[2:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1[v2]`,
+        `[v0][v1]xfade=transition=fade:duration=${transitionDuration}:offset=${offset1}[v01]`,
+        `[v01][v2]xfade=transition=fade:duration=${transitionDuration}:offset=${offset2},format=yuv420p[v]`,
       ];
 
       const hasVoice = voiceoverPath && voiceIndex >= 0;
@@ -87,10 +90,11 @@ export class FfmpegService implements OnModuleInit {
         '-map', '[v]',
         ...(hasAnyAudio ? ['-map', '[a]'] : []),
         '-c:v', 'libx264',
-        '-preset', 'fast',
-        '-crf', '23',
+        '-preset', 'ultrafast',
+        '-crf', '26',
+        '-threads', '2',
         '-movflags', '+faststart',
-        ...(hasAnyAudio ? ['-c:a', 'aac', '-b:a', '192k', '-shortest'] : []),
+        ...(hasAnyAudio ? ['-c:a', 'aac', '-b:a', '128k', '-shortest'] : []),
       ];
 
       cmd.complexFilter(filters)
