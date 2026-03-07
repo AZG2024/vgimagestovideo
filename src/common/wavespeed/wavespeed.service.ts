@@ -38,7 +38,6 @@ export class WaveSpeedService implements OnModuleInit {
       image: imageUrl,
       prompt,
       duration,
-      aspect_ratio: '9:16',
     };
 
     this.logger.log(`Creating I2V task (Kling O3 Pro): duration=${duration}s, image=${imageUrl.substring(0, 80)}...`);
