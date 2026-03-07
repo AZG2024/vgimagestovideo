@@ -30,19 +30,22 @@ export class VideoGenerationService {
 
     try {
       const bucket = this.configService.get<string>('STORAGE_BUCKET')!;
+      const isSquare = job.aspect_ratio === '1:1';
+      const v1Duration = 5;
+      const v2Duration = isSquare ? 5 : 10;
 
-      // Generate videos sequentially with WaveSpeed (Kling O1 - economical)
+      this.logger.log(`Job ${jobId}: Aspect ratio: ${job.aspect_ratio || '9:16'}`);
       this.logger.log(`Job ${jobId}: Premium image URL: ${job.premium_image_url}`);
       this.logger.log(`Job ${jobId}: Model image URL: ${job.model_image_url}`);
 
-      this.logger.log(`Job ${jobId}: Generating video 1 (premium) via Kling O1...`);
+      this.logger.log(`Job ${jobId}: Generating video 1 (premium, ${v1Duration}s) via Kling O3 Pro...`);
       const video1WsUrl = await this.waveSpeedService.generateVideo(
-        job.premium_image_url, VIDEO_PROMPT_PREMIUM, 5,
+        job.premium_image_url, VIDEO_PROMPT_PREMIUM, v1Duration,
       );
 
-      this.logger.log(`Job ${jobId}: Generating video 2 (model) via Kling O1...`);
+      this.logger.log(`Job ${jobId}: Generating video 2 (model, ${v2Duration}s) via Kling O3 Pro...`);
       const video2WsUrl = await this.waveSpeedService.generateVideo(
-        job.model_image_url, VIDEO_PROMPT_MODEL, 10,
+        job.model_image_url, VIDEO_PROMPT_MODEL, v2Duration,
       );
 
       // Download and upload both videos in parallel

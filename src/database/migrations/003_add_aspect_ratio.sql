@@ -1,0 +1,1 @@
+ALTER TABLE video_jobs ADD COLUMN IF NOT EXISTS aspect_ratio TEXT DEFAULT '9:16';

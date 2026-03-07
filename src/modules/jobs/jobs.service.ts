@@ -16,6 +16,7 @@ export interface VideoJob {
   subtitle_url: string | null;
   final_video_url: string | null;
   description_text: string | null;
+  aspect_ratio: string;
   status: string;
   error_message: string | null;
   step_timings: Record<string, number>;

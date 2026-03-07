@@ -20,6 +20,7 @@ const image_generation_module_1 = require("./modules/image-generation/image-gene
 const wavespeed_module_1 = require("./common/wavespeed/wavespeed.module");
 const video_generation_module_1 = require("./modules/video-generation/video-generation.module");
 const ffmpeg_module_1 = require("./common/ffmpeg/ffmpeg.module");
+const shotstack_module_1 = require("./common/shotstack/shotstack.module");
 const openai_module_1 = require("./common/openai/openai.module");
 const elevenlabs_module_1 = require("./common/elevenlabs/elevenlabs.module");
 const video_rendering_module_1 = require("./modules/video-rendering/video-rendering.module");
@@ -38,6 +39,7 @@ exports.AppModule = AppModule = __decorate([
             gemini_module_1.GeminiModule,
             wavespeed_module_1.WaveSpeedModule,
             ffmpeg_module_1.FfmpegModule,
+            shotstack_module_1.ShotstackModule,
             openai_module_1.OpenaiModule,
             elevenlabs_module_1.ElevenLabsModule,
             health_module_1.HealthModule,

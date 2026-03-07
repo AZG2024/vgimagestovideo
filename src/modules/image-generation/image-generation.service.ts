@@ -105,6 +105,7 @@ export class ImageGenerationService {
       await this.jobsService.updateStatus(jobId, 'PENDING', {
         premium_image_url: premiumImageUrl,
         model_image_url: modelImageUrl,
+        aspect_ratio: aspectRatio,
       } as any);
 
       const durationMs = Date.now() - startTime;

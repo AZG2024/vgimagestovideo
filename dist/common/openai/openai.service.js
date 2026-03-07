@@ -37,9 +37,11 @@ let OpenaiService = OpenaiService_1 = class OpenaiService {
 
 Write one single sentence (28–30 words) describing the spiritual and emotional benefits of ${stoneName}.
 
+CRITICAL: You MUST use the exact stone name "${stoneName}" in your sentence. Do NOT replace it with a different stone name or synonym.
+
 Style rules:
 - Elegant and refined tone
-- Similar structure to: "Amethyst is known as the stone of calm and spiritual clarity, believed to..."
+- Start with: "${stoneName} is known as..."
 - No emojis
 - No hashtags
 - No exaggerated medical claims

@@ -27,15 +27,12 @@ let WaveSpeedService = WaveSpeedService_1 = class WaveSpeedService {
     }
     async createImageToVideoTask(imageUrl, prompt, duration = 5) {
         const body = {
-            images: [imageUrl],
+            image: imageUrl,
             prompt,
             duration,
-            aspect_ratio: '9:16',
-            keep_original_sound: false,
-            video: '',
         };
-        this.logger.log(`Creating I2V task (Kling O1): duration=${duration}s, image=${imageUrl.substring(0, 80)}...`);
-        const response = await fetch(`${this.baseUrl}/kwaivgi/kling-video-o1/reference-to-video`, {
+        this.logger.log(`Creating I2V task (Kling O3 Pro): duration=${duration}s, image=${imageUrl.substring(0, 80)}...`);
+        const response = await fetch(`${this.baseUrl}/kwaivgi/kling-video-o3-pro/image-to-video`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -72,6 +69,7 @@ let WaveSpeedService = WaveSpeedService_1 = class WaveSpeedService {
                 return videoUrl;
             }
             if (status === 'failed') {
+                this.logger.error(`Task ${taskId} failed. Full response: ${JSON.stringify(data).substring(0, 1000)}`);
                 throw new Error(`Task failed: ${data.data.error || 'Unknown error'}`);
             }
             await this.delay(pollInterval);

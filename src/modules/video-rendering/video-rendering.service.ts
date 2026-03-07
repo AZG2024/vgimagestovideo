@@ -32,17 +32,24 @@ export class VideoRenderingService {
         this.logger.log(`Job ${jobId}: Selected background music: ${bgMusicUrl}`);
       }
 
-      // Render with Shotstack: video1(5s) → video2(10s) → video1(5s) = ~18s with crossfades
+      const isSquare = job.aspect_ratio === '1:1';
+      const v1Duration = 5;
+      const v2Duration = isSquare ? 5 : 10;
+
       this.logger.log(
-        `Job ${jobId}: Starting Shotstack rendering (voice: ${!!job.audio_url}, music: ${!!bgMusicUrl})...`,
+        `Job ${jobId}: Starting Shotstack rendering (${job.aspect_ratio || '9:16'}, voice: ${!!job.audio_url}, music: ${!!bgMusicUrl})...`,
       );
 
       const renderedVideoUrl = await this.shotstackService.renderFinalVideo(
         job.video1_url,
         job.video2_url,
-        job.video1_url, // reuse video1 as third clip
+        isSquare ? null : job.video1_url, // no third clip for 1:1
         job.audio_url || undefined,
         bgMusicUrl || undefined,
+        1, // transitionDuration
+        v1Duration,
+        v2Duration,
+        job.aspect_ratio || '9:16',
       );
 
       // Download rendered video from Shotstack and upload to Supabase
