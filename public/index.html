@@ -513,7 +513,7 @@ function setAspectRatio(ratio) {
   const resEl = document.getElementById('videoResolution');
   const durEl = document.getElementById('videoDuration');
   if (resEl) resEl.innerHTML = `<span class="material-symbols-outlined text-sm">hd</span> ${ratio === '1:1' ? '1080x1080' : '1080x1920'}`;
-  if (durEl) durEl.innerHTML = `<span class="material-symbols-outlined text-sm">schedule</span> ${ratio === '1:1' ? '~9s' : '~18s'}`;
+  if (durEl) durEl.innerHTML = `<span class="material-symbols-outlined text-sm">schedule</span> ~18s`;
   log('info', `Aspect ratio: ${ratio}`);
 }
 

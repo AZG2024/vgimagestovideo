@@ -50,58 +50,33 @@ export class ShotstackService implements OnModuleInit {
     aspectRatio: string = '9:16',
   ): Promise<string> {
     const isSquare = aspectRatio === '1:1';
+    const video3Duration = video1Duration;
+    const totalDuration = video1Duration + video2Duration + video3Duration - 2 * transitionDuration;
 
-    // Build video clips based on aspect ratio
-    let videoClips: any[];
-    let totalDuration: number;
-
-    if (isSquare) {
-      // 1:1: 2 clips with crossfade
-      totalDuration = video1Duration + video2Duration - transitionDuration;
-      videoClips = [
-        {
-          asset: { type: 'video', src: video1Url, volume: 0 },
-          start: 0,
-          length: video1Duration,
-          fit: 'cover',
-          transition: { out: 'fade' },
-        },
-        {
-          asset: { type: 'video', src: video2Url, volume: 0 },
-          start: video1Duration - transitionDuration,
-          length: video2Duration,
-          fit: 'cover',
-          transition: { in: 'fade' },
-        },
-      ];
-    } else {
-      // 9:16: 3 clips with crossfades
-      const video3Duration = video1Duration;
-      totalDuration = video1Duration + video2Duration + video3Duration - 2 * transitionDuration;
-      videoClips = [
-        {
-          asset: { type: 'video', src: video1Url, volume: 0 },
-          start: 0,
-          length: video1Duration,
-          fit: 'cover',
-          transition: { out: 'fade' },
-        },
-        {
-          asset: { type: 'video', src: video2Url, volume: 0 },
-          start: video1Duration - transitionDuration,
-          length: video2Duration,
-          fit: 'cover',
-          transition: { in: 'fade', out: 'fade' },
-        },
-        {
-          asset: { type: 'video', src: video3Url!, volume: 0 },
-          start: video1Duration + video2Duration - 2 * transitionDuration,
-          length: video3Duration,
-          fit: 'cover',
-          transition: { in: 'fade' },
-        },
-      ];
-    }
+    // Build video track: 3 clips with crossfade transitions (same structure for all ratios)
+    const videoClips: any[] = [
+      {
+        asset: { type: 'video', src: video1Url, volume: 0 },
+        start: 0,
+        length: video1Duration,
+        fit: 'cover',
+        transition: { out: 'fade' },
+      },
+      {
+        asset: { type: 'video', src: video2Url, volume: 0 },
+        start: video1Duration - transitionDuration,
+        length: video2Duration,
+        fit: 'cover',
+        transition: { in: 'fade', out: 'fade' },
+      },
+      {
+        asset: { type: 'video', src: video3Url!, volume: 0 },
+        start: video1Duration + video2Duration - 2 * transitionDuration,
+        length: video3Duration,
+        fit: 'cover',
+        transition: { in: 'fade' },
+      },
+    ];
 
     const tracks: any[] = [{ clips: videoClips }];
 
@@ -145,9 +120,8 @@ export class ShotstackService implements OnModuleInit {
       },
     };
 
-    const clipCount = isSquare ? 2 : 3;
     this.logger.log(
-      `Submitting render: ${clipCount} clips (${aspectRatio}, crossfade ${transitionDuration}s), voice: ${!!voiceoverUrl}, music: ${!!bgMusicUrl}, duration: ~${totalDuration}s`,
+      `Submitting render: 3 clips (${aspectRatio}, crossfade ${transitionDuration}s), voice: ${!!voiceoverUrl}, music: ${!!bgMusicUrl}, duration: ~${totalDuration}s`,
     );
 
     // Submit render job

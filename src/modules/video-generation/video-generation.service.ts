@@ -30,9 +30,8 @@ export class VideoGenerationService {
 
     try {
       const bucket = this.configService.get<string>('STORAGE_BUCKET')!;
-      const isSquare = job.aspect_ratio === '1:1';
       const v1Duration = 5;
-      const v2Duration = isSquare ? 5 : 10;
+      const v2Duration = 10;
 
       this.logger.log(`Job ${jobId}: Aspect ratio: ${job.aspect_ratio || '9:16'}`);
       this.logger.log(`Job ${jobId}: Premium image URL: ${job.premium_image_url}`);

@@ -32,10 +32,6 @@ export class VideoRenderingService {
         this.logger.log(`Job ${jobId}: Selected background music: ${bgMusicUrl}`);
       }
 
-      const isSquare = job.aspect_ratio === '1:1';
-      const v1Duration = 5;
-      const v2Duration = isSquare ? 5 : 10;
-
       this.logger.log(
         `Job ${jobId}: Starting Shotstack rendering (${job.aspect_ratio || '9:16'}, voice: ${!!job.audio_url}, music: ${!!bgMusicUrl})...`,
       );
@@ -43,12 +39,12 @@ export class VideoRenderingService {
       const renderedVideoUrl = await this.shotstackService.renderFinalVideo(
         job.video1_url,
         job.video2_url,
-        isSquare ? null : job.video1_url, // no third clip for 1:1
+        job.video1_url, // reuse video1 as third clip
         job.audio_url || undefined,
         bgMusicUrl || undefined,
         1, // transitionDuration
-        v1Duration,
-        v2Duration,
+        5, // video1Duration
+        10, // video2Duration
         job.aspect_ratio || '9:16',
       );
 
