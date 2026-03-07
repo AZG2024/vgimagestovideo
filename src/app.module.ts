@@ -11,6 +11,7 @@ import { ImageGenerationModule } from './modules/image-generation/image-generati
 import { WaveSpeedModule } from './common/wavespeed/wavespeed.module';
 import { VideoGenerationModule } from './modules/video-generation/video-generation.module';
 import { FfmpegModule } from './common/ffmpeg/ffmpeg.module';
+import { ShotstackModule } from './common/shotstack/shotstack.module';
 import { OpenaiModule } from './common/openai/openai.module';
 import { ElevenLabsModule } from './common/elevenlabs/elevenlabs.module';
 import { VideoRenderingModule } from './modules/video-rendering/video-rendering.module';
@@ -26,6 +27,7 @@ import { AudioGenerationModule } from './modules/audio-generation/audio-generati
     GeminiModule,
     WaveSpeedModule,
     FfmpegModule,
+    ShotstackModule,
     OpenaiModule,
     ElevenLabsModule,
     HealthModule,

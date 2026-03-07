@@ -24,34 +24,29 @@ export class GeminiService implements OnModuleInit {
     const base64Image = imageBuffer.toString('base64');
 
     const contents = [
-      { text: prompt },
       {
         inlineData: {
           mimeType,
           data: base64Image,
         },
       },
+      { text: prompt },
     ];
 
-    const maxRetries = 1;
+    const maxRetries = 2;
     let lastError: Error | undefined;
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         if (attempt > 0) {
-          this.logger.warn(`Retry attempt ${attempt} for image generation`);
-          await this.delay(2000 * attempt);
+          const waitMs = 3000 * attempt;
+          this.logger.warn(`Retry attempt ${attempt} for image generation (waiting ${waitMs}ms)`);
+          await this.delay(waitMs);
         }
 
         const response = await this.ai.models.generateContent({
           model: 'gemini-3.1-flash-image-preview',
           contents,
-          config: {
-            responseModalities: ['TEXT', 'IMAGE'],
-            imageConfig: {
-              aspectRatio,
-            },
-          },
         });
 
         const parts = response.candidates?.[0]?.content?.parts;

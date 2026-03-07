@@ -1,18 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { FfmpegService } from '../../common/ffmpeg/ffmpeg.service';
+import { ShotstackService } from '../../common/shotstack/shotstack.service';
 import { SupabaseService } from '../../common/supabase/supabase.service';
 import { JobsService } from '../jobs/jobs.service';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 
 @Injectable()
 export class VideoRenderingService {
   private readonly logger = new Logger(VideoRenderingService.name);
 
   constructor(
-    private readonly ffmpegService: FfmpegService,
+    private readonly shotstackService: ShotstackService,
     private readonly supabaseService: SupabaseService,
     private readonly jobsService: JobsService,
     private readonly configService: ConfigService,
@@ -28,58 +25,35 @@ export class VideoRenderingService {
 
     await this.jobsService.updateStatus(jobId, 'RENDERING');
 
-    const tmpDir = path.join(os.tmpdir(), `video-render-${jobId}`);
-
     try {
-      // Create temp directory
-      fs.mkdirSync(tmpDir, { recursive: true });
-
-      const video1Path = path.join(tmpDir, 'video1.mp4');
-      const video2Path = path.join(tmpDir, 'video2.mp4');
-      const voiceoverPath = path.join(tmpDir, 'voiceover.mp3');
-      const bgMusicPath = path.join(tmpDir, 'bgmusic.mp3');
-      const outputPath = path.join(tmpDir, 'final.mp4');
-
-      // Download all assets in parallel
-      this.logger.log(`Job ${jobId}: Downloading assets for rendering...`);
-      const downloads: Promise<void>[] = [
-        this.downloadFile(job.video1_url, video1Path),
-        this.downloadFile(job.video2_url, video2Path),
-      ];
-
-      let hasVoiceover = false;
-      let hasBgMusic = false;
-
-      if (job.audio_url) {
-        downloads.push(this.downloadFile(job.audio_url, voiceoverPath));
-        hasVoiceover = true;
-      }
-
-      // Background music: pick a random track from the "music" bucket
+      // Get background music URL
       const bgMusicUrl = await this.getRandomMusicUrl();
       if (bgMusicUrl) {
-        downloads.push(this.downloadFile(bgMusicUrl, bgMusicPath));
-        hasBgMusic = true;
         this.logger.log(`Job ${jobId}: Selected background music: ${bgMusicUrl}`);
       }
 
-      await Promise.all(downloads);
-
-      // Render with FFmpeg: video1(5s) → video2(10s) → video1(5s) = ~18s with 2 crossfades
-      this.logger.log(`Job ${jobId}: Starting FFmpeg rendering (voice: ${hasVoiceover}, music: ${hasBgMusic})...`);
-      await this.ffmpegService.renderFinalVideo(
-        video1Path,
-        video2Path,
-        video1Path,  // reuse video1 as third clip
-        outputPath,
-        hasVoiceover ? voiceoverPath : undefined,
-        hasBgMusic ? bgMusicPath : undefined,
+      // Render with Shotstack: video1(5s) → video2(10s) → video1(5s) = ~18s with crossfades
+      this.logger.log(
+        `Job ${jobId}: Starting Shotstack rendering (voice: ${!!job.audio_url}, music: ${!!bgMusicUrl})...`,
       );
 
-      // Upload final video to Supabase
-      this.logger.log(`Job ${jobId}: Uploading final video...`);
+      const renderedVideoUrl = await this.shotstackService.renderFinalVideo(
+        job.video1_url,
+        job.video2_url,
+        job.video1_url, // reuse video1 as third clip
+        job.audio_url || undefined,
+        bgMusicUrl || undefined,
+      );
+
+      // Download rendered video from Shotstack and upload to Supabase
+      this.logger.log(`Job ${jobId}: Uploading final video to storage...`);
       const bucket = this.configService.get<string>('STORAGE_BUCKET')!;
-      const finalBuffer = fs.readFileSync(outputPath);
+
+      const response = await fetch(renderedVideoUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to download rendered video: ${response.statusText}`);
+      }
+      const finalBuffer = Buffer.from(await response.arrayBuffer());
 
       this.logger.log(`Final video size: ${(finalBuffer.length / 1024 / 1024).toFixed(1)}MB`);
 
@@ -118,14 +92,6 @@ export class VideoRenderingService {
         } as any);
       } catch (updateError) {
         this.logger.error(`Could not update job ${jobId} to FAILED: ${updateError}`);
-      }
-    } finally {
-      // Cleanup temp files
-      try {
-        fs.rmSync(tmpDir, { recursive: true, force: true });
-        this.logger.log(`Cleaned up temp dir: ${tmpDir}`);
-      } catch {
-        this.logger.warn(`Could not clean up temp dir: ${tmpDir}`);
       }
     }
   }
@@ -166,15 +132,5 @@ export class VideoRenderingService {
       this.logger.warn(`Could not fetch music from bucket: ${err}`);
       return null;
     }
-  }
-
-  private async downloadFile(url: string, destPath: string): Promise<void> {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to download ${url}: ${response.statusText}`);
-    }
-    const buffer = Buffer.from(await response.arrayBuffer());
-    fs.writeFileSync(destPath, buffer);
-    this.logger.log(`Downloaded ${path.basename(destPath)} (${(buffer.length / 1024 / 1024).toFixed(1)}MB)`);
   }
 }
