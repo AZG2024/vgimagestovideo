@@ -129,10 +129,11 @@ export class ShotstackService implements OnModuleInit {
       body: JSON.stringify(body),
     });
 
-    const renderData = (await renderResponse.json()) as ShotstackRenderResponse;
+    const renderData = await renderResponse.json();
+    this.logger.log(`Shotstack response: ${JSON.stringify(renderData).substring(0, 500)}`);
 
     if (!renderData.success) {
-      throw new Error(`Shotstack render failed: ${renderData.message}`);
+      throw new Error(`Shotstack render failed: ${renderData.message || JSON.stringify(renderData)}`);
     }
 
     const renderId = renderData.response.id;
