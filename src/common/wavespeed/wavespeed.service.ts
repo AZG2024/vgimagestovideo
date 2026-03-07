@@ -33,14 +33,16 @@ export class WaveSpeedService implements OnModuleInit {
     imageUrl: string,
     prompt: string,
     duration: number = 5,
+    aspectRatio: string = '9:16',
   ): Promise<string> {
     const body = {
       image: imageUrl,
       prompt,
       duration,
+      aspect_ratio: aspectRatio,
     };
 
-    this.logger.log(`Creating I2V task (Kling O3 Pro): duration=${duration}s, image=${imageUrl.substring(0, 80)}...`);
+    this.logger.log(`Creating I2V task (Kling O3 Pro): duration=${duration}s, ratio=${aspectRatio}, image=${imageUrl.substring(0, 80)}...`);
 
     const response = await fetch(
       `${this.baseUrl}/kwaivgi/kling-video-o3-pro/image-to-video`,
@@ -113,8 +115,9 @@ export class WaveSpeedService implements OnModuleInit {
     imageUrl: string,
     prompt: string,
     duration: number = 5,
+    aspectRatio: string = '9:16',
   ): Promise<string> {
-    const taskId = await this.createImageToVideoTask(imageUrl, prompt, duration);
+    const taskId = await this.createImageToVideoTask(imageUrl, prompt, duration, aspectRatio);
     return this.pollTaskUntilDone(taskId);
   }
 

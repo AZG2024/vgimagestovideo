@@ -38,14 +38,16 @@ export class VideoGenerationService {
       this.logger.log(`Job ${jobId}: Premium image URL: ${job.premium_image_url}`);
       this.logger.log(`Job ${jobId}: Model image URL: ${job.model_image_url}`);
 
-      this.logger.log(`Job ${jobId}: Generating video 1 (premium, ${v1Duration}s) via Kling O3 Pro...`);
+      const ratio = job.aspect_ratio || '9:16';
+
+      this.logger.log(`Job ${jobId}: Generating video 1 (premium, ${v1Duration}s, ${ratio}) via Kling O3 Pro...`);
       const video1WsUrl = await this.waveSpeedService.generateVideo(
-        job.premium_image_url, VIDEO_PROMPT_PREMIUM, v1Duration,
+        job.premium_image_url, VIDEO_PROMPT_PREMIUM, v1Duration, ratio,
       );
 
-      this.logger.log(`Job ${jobId}: Generating video 2 (model, ${v2Duration}s) via Kling O3 Pro...`);
+      this.logger.log(`Job ${jobId}: Generating video 2 (model, ${v2Duration}s, ${ratio}) via Kling O3 Pro...`);
       const video2WsUrl = await this.waveSpeedService.generateVideo(
-        job.model_image_url, VIDEO_PROMPT_MODEL, v2Duration,
+        job.model_image_url, VIDEO_PROMPT_MODEL, v2Duration, ratio,
       );
 
       // Download and upload both videos in parallel
