@@ -38,6 +38,7 @@ export class WaveSpeedService implements OnModuleInit {
       image: imageUrl,
       prompt,
       duration,
+      aspect_ratio: '9:16',
     };
 
     this.logger.log(`Creating I2V task (Kling O3 Pro): duration=${duration}s, image=${imageUrl.substring(0, 80)}...`);
@@ -98,6 +99,7 @@ export class WaveSpeedService implements OnModuleInit {
       }
 
       if (status === 'failed') {
+        this.logger.error(`Task ${taskId} failed. Full response: ${JSON.stringify(data).substring(0, 1000)}`);
         throw new Error(`Task failed: ${data.data.error || 'Unknown error'}`);
       }
 
