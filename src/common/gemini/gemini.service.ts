@@ -231,6 +231,63 @@ export class GeminiService implements OnModuleInit {
     return results;
   }
 
+  async generateCollageFromImages(
+    images: Array<{ buffer: Buffer; mimeType: string }>,
+    prompt: string,
+  ): Promise<Buffer> {
+    const contents: any[] = images.map((img) => ({
+      inlineData: {
+        mimeType: img.mimeType,
+        data: img.buffer.toString('base64'),
+      },
+    }));
+    contents.push({ text: prompt });
+
+    this.logger.log(`Generating collage from ${images.length} images...`);
+
+    const maxRetries = 2;
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          const waitMs = 3000 * attempt;
+          this.logger.warn(`Retry attempt ${attempt} for collage generation (waiting ${waitMs}ms)`);
+          await this.delay(waitMs);
+        }
+
+        const response = await this.ai.models.generateContent({
+          model: 'gemini-3.1-flash-image-preview',
+          contents,
+        });
+
+        const parts = response.candidates?.[0]?.content?.parts;
+        if (!parts) {
+          throw new Error('No content parts in Gemini collage response');
+        }
+
+        for (const part of parts) {
+          if (part.inlineData?.data) {
+            const buffer = Buffer.from(part.inlineData.data, 'base64');
+            this.logger.log(
+              `Collage generated successfully (${(buffer.length / 1024).toFixed(0)}KB)`,
+            );
+            return buffer;
+          }
+        }
+
+        throw new Error('No image data found in Gemini collage response');
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        this.logger.error(
+          `Collage generation failed (attempt ${attempt + 1}): ${lastError.message}`,
+        );
+      }
+    }
+
+    throw lastError ?? new Error('Collage generation failed');
+  }
+
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }

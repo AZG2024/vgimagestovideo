@@ -105,6 +105,8 @@ tailwind.config = {
       <div class="flex gap-2">
         <button class="ratio-btn flex-1 bg-primary text-white text-xs font-bold py-2 rounded-lg border border-primary" data-ratio="9:16">9:16</button>
         <button class="ratio-btn flex-1 bg-slate-800 text-slate-400 text-xs font-bold py-2 rounded-lg border border-transparent hover:border-slate-600" data-ratio="1:1">1:1</button>
+        <button class="ratio-btn flex-1 bg-slate-800 text-slate-400 text-xs font-bold py-2 rounded-lg border border-transparent hover:border-slate-600" data-ratio="instapro">Instapro</button>
+        <button class="ratio-btn flex-1 bg-slate-800 text-slate-400 text-xs font-bold py-2 rounded-lg border border-transparent hover:border-slate-600" data-ratio="promotion">Promo</button>
       </div>
       <p id="ratioHint" class="text-[10px] text-slate-500 mt-1">Reel vertical - Full video pipeline</p>
     </div>
@@ -205,6 +207,8 @@ tailwind.config = {
           <div class="flex gap-2">
             <button class="mobile-ratio-btn flex-1 bg-primary text-white text-xs font-bold py-1.5 rounded-lg border border-primary" data-ratio="9:16">9:16 Reel</button>
             <button class="mobile-ratio-btn flex-1 bg-slate-800 text-slate-400 text-xs font-bold py-1.5 rounded-lg border border-transparent" data-ratio="1:1">1:1 Post</button>
+            <button class="mobile-ratio-btn flex-1 bg-slate-800 text-slate-400 text-xs font-bold py-1.5 rounded-lg border border-transparent" data-ratio="instapro">Instapro</button>
+            <button class="mobile-ratio-btn flex-1 bg-slate-800 text-slate-400 text-xs font-bold py-1.5 rounded-lg border border-transparent" data-ratio="promotion">Promo</button>
           </div>
         </div>
       </div>
@@ -214,20 +218,20 @@ tailwind.config = {
         <div class="flex items-center gap-3">
           <div class="flex items-center justify-center size-9 rounded-full bg-primary text-white font-bold text-sm shadow-lg shadow-primary/25 ring-4 ring-[#0b0f17]">1</div>
           <div>
-            <h3 class="text-lg font-bold text-white">Source Image</h3>
-            <p class="text-xs text-slate-400">Upload your base image to start the process</p>
+            <h3 id="step1Title" class="text-lg font-bold text-white">Source Image</h3>
+            <p id="step1Desc" class="text-xs text-slate-400">Upload your base image to start the process</p>
           </div>
         </div>
 
-        <!-- Drop Zone -->
+        <!-- Drop Zone (single file - normal mode) -->
         <div id="dropZone" class="drop-zone group relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-slate-700 bg-[#151c2b] px-6 py-14 transition-all hover:border-primary cursor-pointer">
           <span class="material-symbols-outlined text-slate-500 group-hover:text-primary text-4xl transition-colors">cloud_upload</span>
-          <p class="text-white font-bold">Drop your image here, or <span class="text-primary">browse</span></p>
-          <p class="text-slate-400 text-sm">Supports PNG, JPG, WEBP up to 25MB</p>
+          <p id="dropZoneTitle" class="text-white font-bold">Drop your image here, or <span class="text-primary">browse</span></p>
+          <p id="dropZoneHint" class="text-slate-400 text-sm">Supports PNG, JPG, WEBP up to 25MB</p>
           <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" class="absolute inset-0 cursor-pointer opacity-0 pointer-events-none"/>
         </div>
 
-        <!-- Preview (hidden until file selected) -->
+        <!-- Preview (single file - normal mode) -->
         <div id="previewSection" class="hidden bg-[#151c2b] rounded-xl border border-slate-800 p-4 flex items-center gap-4">
           <img id="previewImg" class="w-20 h-20 rounded-lg object-cover" src="" alt="Preview"/>
           <div class="flex-1">
@@ -239,6 +243,12 @@ tailwind.config = {
             <span class="material-symbols-outlined text-base">upload</span> Upload
           </button>
         </div>
+
+        <!-- Preview Grid (multi file - instapro mode) -->
+        <div id="instaproPreviewSection" class="hidden bg-[#151c2b] rounded-xl border border-slate-800 p-4">
+          <div id="instaproPreviewGrid" class="grid grid-cols-3 gap-2 mb-3"></div>
+          <p id="instaproFileCount" class="text-xs text-slate-400 mb-2"></p>
+        </div>
       </div>
 
       <!-- Step 2: Enhanced Variants -->
@@ -247,8 +257,8 @@ tailwind.config = {
           <div id="circle2" class="flex items-center justify-center size-9 rounded-full bg-slate-800 text-slate-400 font-bold text-sm ring-4 ring-[#0b0f17]">2</div>
         </div>
         <div class="ml-5 mb-2">
-          <h3 class="text-lg font-bold text-white">Enhanced Variants</h3>
-          <p class="text-xs text-slate-400">AI-generated premium and model images</p>
+          <h3 id="step2Title" class="text-lg font-bold text-white">Enhanced Variants</h3>
+          <p id="step2Desc" class="text-xs text-slate-400">AI-generated premium and model images</p>
         </div>
 
         <!-- Generate button -->
@@ -258,7 +268,7 @@ tailwind.config = {
           </button>
         </div>
 
-        <!-- Image results -->
+        <!-- Image results (normal mode) -->
         <div id="resultsSection" class="hidden ml-5">
           <div class="bg-[#151c2b] rounded-xl border border-slate-800 p-5">
             <div class="grid grid-cols-2 gap-4">
@@ -280,6 +290,58 @@ tailwind.config = {
                 </div>
                 <div class="absolute top-2 left-2 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase">Model</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collage generator (instapro mode) -->
+        <div id="collageSection" class="hidden ml-5">
+          <div class="mb-3">
+            <span class="text-xs font-medium text-slate-400 mb-1 block">Category Name (shown on collage)</span>
+            <input type="text" id="collageCategoryInput" placeholder="e.g. NECKLACES, BRACELETS..." class="w-full bg-slate-800 border-none rounded-lg text-sm px-3 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-pink-500">
+          </div>
+          <button id="btnCollage" class="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-sm font-bold px-5 py-2.5 rounded-lg transition-all flex items-center gap-2" disabled>
+            <span class="material-symbols-outlined text-base">auto_awesome</span> Generate Collage
+          </button>
+        </div>
+
+        <!-- Collage result (instapro mode) -->
+        <div id="collageResultSection" class="hidden ml-5 mt-3">
+          <div class="bg-[#151c2b] rounded-xl border border-slate-800 p-5">
+            <div class="group relative rounded-lg overflow-hidden bg-slate-800 max-w-lg mx-auto">
+              <img id="collageImg" class="w-full aspect-square object-cover" src="" alt="Collage"/>
+              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button id="downloadCollageImg" onclick="forceDownload(this.dataset.url, 'instapro-collage.png')" class="bg-white/10 backdrop-blur text-white hover:bg-white hover:text-primary p-2.5 rounded-lg transition-colors flex items-center gap-2 text-sm font-semibold cursor-pointer" data-url="">
+                  <span class="material-symbols-outlined text-base">download</span> Download Collage
+                </button>
+              </div>
+              <div class="absolute top-2 left-2 bg-gradient-to-r from-pink-600 to-purple-600 px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase">Instapro Collage</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Promotion generator (promotion mode) -->
+        <div id="promotionSection" class="hidden ml-5">
+          <div class="mb-3">
+            <span class="text-xs font-medium text-slate-400 mb-1 block">Discount Percentage</span>
+            <input type="number" id="promotionDiscountInput" min="1" max="99" placeholder="e.g. 20, 30, 50..." class="w-full bg-slate-800 border-none rounded-lg text-sm px-3 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-500">
+          </div>
+          <button id="btnPromotion" class="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white text-sm font-bold px-5 py-2.5 rounded-lg transition-all flex items-center gap-2" disabled>
+            <span class="material-symbols-outlined text-base">local_offer</span> Generate Promotion
+          </button>
+        </div>
+
+        <!-- Promotion result (promotion mode) -->
+        <div id="promotionResultSection" class="hidden ml-5 mt-3">
+          <div class="bg-[#151c2b] rounded-xl border border-slate-800 p-5">
+            <div class="group relative rounded-lg overflow-hidden bg-slate-800 max-w-lg mx-auto">
+              <img id="promotionImg" class="w-full aspect-square object-cover" src="" alt="Promotion"/>
+              <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button id="downloadPromotionImg" onclick="forceDownload(this.dataset.url, 'promotion.png')" class="bg-white/10 backdrop-blur text-white hover:bg-white hover:text-primary p-2.5 rounded-lg transition-colors flex items-center gap-2 text-sm font-semibold cursor-pointer" data-url="">
+                  <span class="material-symbols-outlined text-base">download</span> Download Promotion
+                </button>
+              </div>
+              <div class="absolute top-2 left-2 bg-gradient-to-r from-amber-600 to-orange-600 px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase">Promotion</div>
             </div>
           </div>
         </div>
@@ -472,16 +534,29 @@ function updateMobileStep(n, state) {
 }
 
 // --- Aspect Ratio (shared logic) ---
+let instaproMode = false;
+let promotionMode = false;
+let instaproFiles = [];
+let promotionFile = null;
+
+function hideAllSpecialSections() {
+  document.getElementById('collageSection').classList.add('hidden');
+  document.getElementById('collageResultSection').classList.add('hidden');
+  document.getElementById('promotionSection').classList.add('hidden');
+  document.getElementById('promotionResultSection').classList.add('hidden');
+  document.getElementById('instaproPreviewSection').classList.add('hidden');
+}
+
 function setAspectRatio(ratio) {
   selectedRatio = ratio;
+  instaproMode = ratio === 'instapro';
+  promotionMode = ratio === 'promotion';
 
   // Sync all ratio buttons (sidebar + mobile)
   document.querySelectorAll('.ratio-btn, .mobile-ratio-btn').forEach(b => {
     if (b.dataset.ratio === ratio) {
-      b.className = b.className.replace(/bg-slate-800 text-slate-400/g, '').replace(/border-transparent/g, '');
       b.classList.add('bg-primary', 'text-white');
       b.classList.remove('bg-slate-800', 'text-slate-400', 'border-transparent');
-      b.style.borderColor = '';
     } else {
       b.classList.remove('bg-primary', 'text-white');
       b.classList.add('bg-slate-800', 'text-slate-400');
@@ -491,30 +566,79 @@ function setAspectRatio(ratio) {
   const hint = document.getElementById('ratioHint');
   const videoSteps = document.querySelectorAll('.video-step');
   const videoSections = document.querySelectorAll('.video-section');
+  const fileInput = document.getElementById('fileInput');
+  const dropTitle = document.getElementById('dropZoneTitle');
+  const dropHint = document.getElementById('dropZoneHint');
+  const generateBtnWrap = document.getElementById('generateBtnWrap');
 
-  if (ratio === '1:1') {
-    if (hint) hint.textContent = 'Square post - Full video pipeline';
-    document.querySelectorAll('#resultsSection img').forEach(img => {
-      img.classList.remove('aspect-[9/16]');
-      img.classList.add('aspect-square');
-    });
+  // Reset all special sections
+  hideAllSpecialSections();
+
+  if (instaproMode) {
+    if (hint) hint.textContent = 'Instapro - Collage moodboard';
+    videoSteps.forEach(s => s.style.display = 'none');
+    videoSections.forEach(s => s.style.display = 'none');
+    document.getElementById('step1Title').textContent = 'Product Images';
+    document.getElementById('step1Desc').textContent = 'Upload 4-6 product images for the collage';
+    fileInput.multiple = true;
+    dropTitle.innerHTML = 'Drop 4-6 product images here, or <span class="text-primary">browse</span>';
+    dropHint.textContent = 'Select between 4 and 6 images (PNG, JPG, WEBP)';
+    document.getElementById('step2Title').textContent = 'Instapro Collage';
+    document.getElementById('step2Desc').textContent = 'Generate a luxury moodboard from your products';
+    if (generateBtnWrap) generateBtnWrap.style.display = 'none';
+    document.getElementById('collageSection').classList.remove('hidden');
+    document.getElementById('previewSection').classList.add('hidden');
+    document.getElementById('resultsSection').classList.add('hidden');
+    instaproFiles = [];
+  } else if (promotionMode) {
+    if (hint) hint.textContent = 'Promotion - Discount image';
+    videoSteps.forEach(s => s.style.display = 'none');
+    videoSections.forEach(s => s.style.display = 'none');
+    document.getElementById('step1Title').textContent = 'Product Image';
+    document.getElementById('step1Desc').textContent = 'Upload your product image for the promotion';
+    fileInput.multiple = false;
+    dropTitle.innerHTML = 'Drop your product image here, or <span class="text-primary">browse</span>';
+    dropHint.textContent = 'Upload 1 product image (PNG, JPG, WEBP)';
+    document.getElementById('step2Title').textContent = 'Promotion Generator';
+    document.getElementById('step2Desc').textContent = 'Create a luxury promotional image with discount';
+    if (generateBtnWrap) generateBtnWrap.style.display = 'none';
+    document.getElementById('promotionSection').classList.remove('hidden');
+    document.getElementById('previewSection').classList.add('hidden');
+    document.getElementById('resultsSection').classList.add('hidden');
+    promotionFile = null;
   } else {
-    if (hint) hint.textContent = 'Reel vertical - Full video pipeline';
-    document.querySelectorAll('#resultsSection img').forEach(img => {
-      img.classList.remove('aspect-square');
-      img.classList.add('aspect-[9/16]');
-    });
-  }
-  // Keep all video steps visible for both ratios
-  videoSteps.forEach(s => s.style.display = 'flex');
-  videoSections.forEach(s => s.style.display = '');
+    // Normal mode (9:16 or 1:1)
+    if (ratio === '1:1') {
+      if (hint) hint.textContent = 'Square post - Full video pipeline';
+      document.querySelectorAll('#resultsSection img').forEach(img => {
+        img.classList.remove('aspect-[9/16]');
+        img.classList.add('aspect-square');
+      });
+    } else {
+      if (hint) hint.textContent = 'Reel vertical - Full video pipeline';
+      document.querySelectorAll('#resultsSection img').forEach(img => {
+        img.classList.remove('aspect-square');
+        img.classList.add('aspect-[9/16]');
+      });
+    }
+    videoSteps.forEach(s => s.style.display = 'flex');
+    videoSections.forEach(s => s.style.display = '');
+    document.getElementById('step1Title').textContent = 'Source Image';
+    document.getElementById('step1Desc').textContent = 'Upload your base image to start the process';
+    fileInput.multiple = false;
+    dropTitle.innerHTML = 'Drop your image here, or <span class="text-primary">browse</span>';
+    dropHint.textContent = 'Supports PNG, JPG, WEBP up to 25MB';
+    document.getElementById('step2Title').textContent = 'Enhanced Variants';
+    document.getElementById('step2Desc').textContent = 'AI-generated premium and model images';
+    if (generateBtnWrap) generateBtnWrap.style.display = '';
+    document.getElementById('btnUpload').style.display = '';
 
-  // Update final video metadata
-  const resEl = document.getElementById('videoResolution');
-  const durEl = document.getElementById('videoDuration');
-  if (resEl) resEl.innerHTML = `<span class="material-symbols-outlined text-sm">hd</span> ${ratio === '1:1' ? '1080x1080' : '1080x1920'}`;
-  if (durEl) durEl.innerHTML = `<span class="material-symbols-outlined text-sm">schedule</span> ~18s`;
-  log('info', `Aspect ratio: ${ratio}`);
+    const resEl = document.getElementById('videoResolution');
+    const durEl = document.getElementById('videoDuration');
+    if (resEl) resEl.innerHTML = `<span class="material-symbols-outlined text-sm">hd</span> ${ratio === '1:1' ? '1080x1080' : '1080x1920'}`;
+    if (durEl) durEl.innerHTML = `<span class="material-symbols-outlined text-sm">schedule</span> ~18s`;
+  }
+  log('info', `Mode: ${instaproMode ? 'Instapro' : promotionMode ? 'Promotion' : ratio}`);
 }
 
 // Sidebar ratio buttons
@@ -581,9 +705,23 @@ dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover
 dropZone.addEventListener('drop', (e) => {
   e.preventDefault();
   dropZone.classList.remove('dragover');
-  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  if (instaproMode) {
+    handleInstaproFiles(e.dataTransfer.files);
+  } else if (promotionMode) {
+    if (e.dataTransfer.files.length) handlePromotionFile(e.dataTransfer.files[0]);
+  } else {
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  }
 });
-fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
+fileInput.addEventListener('change', (e) => {
+  if (instaproMode) {
+    handleInstaproFiles(e.target.files);
+  } else if (promotionMode) {
+    if (e.target.files.length) handlePromotionFile(e.target.files[0]);
+  } else {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+  }
+});
 
 function handleFile(file) {
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
@@ -602,6 +740,58 @@ function handleFile(file) {
   };
   reader.readAsDataURL(file);
   log('info', `File selected: ${file.name}`);
+}
+
+function handlePromotionFile(file) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    log('error', `Invalid type: ${file.type}`);
+    return;
+  }
+  promotionFile = file;
+  // Show preview in normal preview section (reuse it)
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+    document.getElementById('previewSection').classList.remove('hidden');
+    document.getElementById('btnUpload').style.display = 'none';
+    document.getElementById('jobId').textContent = '';
+  };
+  reader.readAsDataURL(file);
+  // Enable promotion generation
+  showSection(2);
+  document.getElementById('btnPromotion').disabled = false;
+  log('success', `Product image selected for promotion: ${file.name}`);
+}
+
+function handleInstaproFiles(fileList) {
+  const files = Array.from(fileList).filter(f => ['image/jpeg', 'image/png', 'image/webp'].includes(f.type));
+  if (files.length < 4 || files.length > 6) {
+    log('error', `Select between 4 and 6 images (got ${files.length})`);
+    return;
+  }
+  instaproFiles = files;
+  // Show preview grid
+  const grid = document.getElementById('instaproPreviewGrid');
+  grid.innerHTML = '';
+  files.forEach((file, i) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.className = 'w-full aspect-square object-cover rounded-lg';
+      img.alt = `Image ${i + 1}`;
+      grid.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById('instaproFileCount').textContent = `${files.length} images selected`;
+  document.getElementById('instaproPreviewSection').classList.remove('hidden');
+  // Enable collage generation
+  showSection(2);
+  document.getElementById('btnCollage').disabled = false;
+  log('success', `${files.length} images selected for Instapro collage`);
 }
 
 // --- Upload ---
@@ -920,6 +1110,93 @@ document.getElementById('btnRender').addEventListener('click', async () => {
     setStepState(5, 'failed');
     btn.disabled = false;
     btn.innerHTML = '<span class="material-symbols-outlined text-base">play_circle</span> Render Video';
+    setStatus('Error', 'red');
+  }
+});
+
+// --- Generate Collage (Instapro) ---
+document.getElementById('btnCollage').addEventListener('click', async () => {
+  if (!instaproFiles.length) return;
+  const categoryName = document.getElementById('collageCategoryInput').value.trim();
+  if (!categoryName) {
+    log('error', 'Enter a category name (e.g. NECKLACES)');
+    return;
+  }
+
+  const btn = document.getElementById('btnCollage');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span> Generating collage...';
+  setStepState(2, 'active');
+  setStatus('Generating collage...', 'blue');
+  log('info', `Generating Instapro collage: ${instaproFiles.length} images, category="${categoryName}"`);
+
+  try {
+    const formData = new FormData();
+    instaproFiles.forEach(f => formData.append('images', f));
+    formData.append('categoryName', categoryName);
+
+    const res = await fetch(`${API}/collage/generate`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Collage generation failed');
+
+    log('success', 'Collage generated!');
+    document.getElementById('collageImg').src = data.collageUrl;
+    document.getElementById('downloadCollageImg').dataset.url = data.collageUrl;
+    document.getElementById('collageResultSection').classList.remove('hidden');
+
+    setStepState(2, 'completed');
+    btn.innerHTML = '<span class="material-symbols-outlined text-base">check</span> Done';
+    setStatus('Completed', 'green');
+  } catch (err) {
+    log('error', `Collage error: ${err.message}`);
+    setStepState(2, 'failed');
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined text-base">auto_awesome</span> Generate Collage';
+    setStatus('Error', 'red');
+  }
+});
+
+// --- Generate Promotion ---
+document.getElementById('btnPromotion').addEventListener('click', async () => {
+  if (!promotionFile) {
+    log('error', 'Select a product image first');
+    return;
+  }
+  const discount = document.getElementById('promotionDiscountInput').value.trim();
+  if (!discount || isNaN(discount) || discount < 1 || discount > 99) {
+    log('error', 'Enter a valid discount (1-99)');
+    return;
+  }
+
+  const btn = document.getElementById('btnPromotion');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span> Generating promotion...';
+  setStepState(2, 'active');
+  setStatus('Generating promotion...', 'blue');
+  log('info', `Generating promotion: ${discount}% OFF`);
+
+  try {
+    const formData = new FormData();
+    formData.append('image', promotionFile);
+    formData.append('discount', discount);
+
+    const res = await fetch(`${API}/collage/promotion`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Promotion generation failed');
+
+    log('success', 'Promotion image generated!');
+    document.getElementById('promotionImg').src = data.promotionUrl;
+    document.getElementById('downloadPromotionImg').dataset.url = data.promotionUrl;
+    document.getElementById('promotionResultSection').classList.remove('hidden');
+
+    setStepState(2, 'completed');
+    btn.innerHTML = '<span class="material-symbols-outlined text-base">check</span> Done';
+    setStatus('Completed', 'green');
+  } catch (err) {
+    log('error', `Promotion error: ${err.message}`);
+    setStepState(2, 'failed');
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined text-base">local_offer</span> Generate Promotion';
     setStatus('Error', 'red');
   }
 });

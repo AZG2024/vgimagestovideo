@@ -16,6 +16,7 @@ import { OpenaiModule } from './common/openai/openai.module';
 import { ElevenLabsModule } from './common/elevenlabs/elevenlabs.module';
 import { VideoRenderingModule } from './modules/video-rendering/video-rendering.module';
 import { AudioGenerationModule } from './modules/audio-generation/audio-generation.module';
+import { CollageModule } from './modules/collage/collage.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AudioGenerationModule } from './modules/audio-generation/audio-generati
     VideoGenerationModule,
     VideoRenderingModule,
     AudioGenerationModule,
+    CollageModule,
   ],
 })
 export class AppModule {}
